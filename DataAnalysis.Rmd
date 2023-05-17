@@ -702,3 +702,537 @@ ggsave("LeafSections_EtBio_PCA.png", width = 4, height = 4)
 
 
 
+
+
+#Experiment 2
+##import data
+
+
+```{r import protein data}
+tmt2 <- read.csv("acs-B-M-H leaf section 091322 protein groups-raw.csv", stringsAsFactors = F)
+n <- nrow(tmt2)
+print(c("total proteins =", n), quote = F)
+#Make gene column
+tmt2$Gene <- substr(tmt2$Accession, start = 1, stop = 14)
+#Assign Entrez numbers
+##manually assign organelle-encoded accessions
+organelleEntrez <- tmt2[grep("Zema|Zeam", tmt2$Gene),]
+organelleEntrez <- data.frame("Gene"=organelleEntrez$Gene, "Entrez"=NA)
+##assign chloroplast accessions
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp003.1"] <- "845178"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp004.1"] <- "845232"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp008.1"] <- "845201"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp013.1"] <- "845225"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp014.1"] <- "845226"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp016.1"] <- "845236"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp017.1"] <- "845174"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp018.1"] <- "845173"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp019.1"] <- "845172"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp019.1"] <- "845172"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp021.1"] <- "845229"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp022.1"] <- "845196"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp023.1"] <- "845195"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp024.1"] <- "1466361"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp026.1"] <- "845238"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp027.1"] <- "845189"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp028.1"] <- "845190"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp029.1"] <- "845182"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp030.1"] <- "845171"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp032.1"] <- "845212"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp035.1"] <- "845175"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp036.1"] <- "845191"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp039.1"] <- "845204"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp040.1"] <- "845203"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp043.1"] <- "845198"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp044.1"] <- "845222"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp045.1"] <- "845233"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp046.1"] <- "845217"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp047.1"] <- "845176"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp048.1"] <- "845200"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp050.1"] <- "845211"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp051.1"] <- "845205"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp052.1"] <- "845192"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp053.1"] <- "845193"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp054.1"] <- "845224"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp055.1"] <- "845228"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp056.1"] <- "845223"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp057.1"] <- "845177"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp058.1"] <- "845241"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp059.1"] <- "845213"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp060.1"] <- "845214"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp061.1"] <- "845237"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp062.1"] <- "845218"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp063.1"] <- "845235"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp065.1"] <- "845216"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp067.1"] <- "845220"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp075.1"] <- "845181"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp082.1"] <- "845230"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp083.1"] <- "845185"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp084.1"] <- "845221"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp085.1"] <- "1466378"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp086.1"] <- "845183"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp087.1"] <- "1466379"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp088.1"] <- "845184"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp090.1"] <- "845188"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp091.1"] <- "845179"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp092.1"] <- "845187"
+##assign mitochondrial accessions
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp008.1"] <- "4055864"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp024.1"] <- "4055860"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp032.1"] <- "4055888"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp033.1"] <- "4055938"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp036.1"] <- "4055894"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp050.1"] <- "4055956"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp051.1"] <- "4055881"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp057.1"] <- "4055973"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp081.1"] <- "4055890"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp092.1"] <- "4055837"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp097.1"] <- "4055857"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp098.1"] <- "4055896"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp113.1"] <- "4055802"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp119.1"] <- "4055928"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp129.1"] <- "4055878"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp136.1"] <- "4056004"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp159.1"] <- "4055794"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp167.1"] <- "4056007"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp179.1"] <- "4056006"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp185.1"] <- "4055892"
+##add organelle entrez to mgdb-assigned Entrez numbers 
+Entrez <- mgdb[,c(1,12)]
+colnames(Entrez) <- c("Gene", "Entrez")
+Entrez <- Entrez[!Entrez$Entrez=="",]
+Entrez <- rbind(Entrez, organelleEntrez)
+Entrez <- unique(Entrez)
+saveRDS(Entrez, "Entrez")
+#add Entrez to data
+tmt2 <- join(x = tmt2, y = Entrez, by = "Gene", type="left", match="first")
+#reorder columns
+tmt2 <- tmt2[,c(1,23,26,24,18:22,2:13,15:17)]
+#remove non-maize proteins
+tmt2 <- tmt2[(grep("Zm|Zema|Zeam", tmt2$Accession)),]
+n2 <- nrow(tmt2)
+print(c("non-maize proteins removed =", (n-n2)), quote = F)
+#remove polymorphic proteins
+tmt2.pm <- tmt2[grep("only", tmt2$Accession),]
+tmt2 <- tmt2[-grep("only", tmt2$Accession),]
+n3 <- nrow(tmt2)
+print(c("polymorphic proteins removed =", (n2-n3)), quote = F)
+#remove rows with missing tmt data
+tmt2 <- tmt2[!tmt2[,10]==0,]
+tmt2 <- tmt2[!tmt2[,11]==0,]
+tmt2 <- tmt2[!tmt2[,12]==0,]
+tmt2 <- tmt2[!tmt2[,13]==0,]
+tmt2 <- tmt2[!tmt2[,14]==0,]
+tmt2 <- tmt2[!tmt2[,15]==0,]
+tmt2 <- tmt2[!tmt2[,16]==0,]
+tmt2 <- tmt2[!tmt2[,17]==0,]
+tmt2 <- tmt2[!tmt2[,18]==0,]
+tmt2 <- tmt2[!tmt2[,19]==0,]
+tmt2 <- tmt2[!tmt2[,20]==0,]
+tmt2 <- tmt2[!tmt2[,21]==0,]
+tmt2 <- tmt2[!tmt2[,22]==0,]
+tmt2 <- tmt2[!tmt2[,23]==0,]
+tmt2 <- tmt2[!tmt2[,24]==0,]
+n4 <- nrow(tmt2)
+print(c("proteins with missing data removed =", (n3-n4)), quote = F)
+print(c("remaining proteins =", n4), quote = F)
+```
+
+
+##normalization
+```{r}
+tmt2$acs.tot4 <- rowSums(tmt2[,c("acs.s1","acs.s2","acs.s3","acs.s4")])
+tmt2$acs.tot3 <- rowSums(tmt2[,c("acs.s2","acs.s3","acs.s4")])
+
+tmt2$B73.tot4 <- rowSums(tmt2[,c("B73.s1","B73.s2","B73.s3","B73.s4")])
+tmt2$B73.tot3 <- rowSums(tmt2[,c("B73.s2","B73.s3","B73.s4")])
+
+tmt2$Mo17.tot4 <- rowSums(tmt2[,c("Mo17.s1","Mo17.s2","Mo17.s3","Mo17.s4")])
+tmt2$Mo17.tot3 <- rowSums(tmt2[,c("Mo17.s2","Mo17.s3","Mo17.s4")])
+
+tmt2$BM.tot3 <- rowSums(tmt2[,c("BM.s2","BM.s3","BM.s4")])
+```
+```{r}
+tmt2$acs.s1.tot4 <- tmt2$acs.s1/tmt2$acs.tot4
+tmt2$acs.s2.tot4 <- tmt2$acs.s2/tmt2$acs.tot4
+tmt2$acs.s3.tot4 <- tmt2$acs.s3/tmt2$acs.tot4
+tmt2$acs.s4.tot4 <- tmt2$acs.s4/tmt2$acs.tot4
+
+tmt2$acs.s2.tot3 <- tmt2$acs.s2/tmt2$acs.tot3
+tmt2$acs.s3.tot3 <- tmt2$acs.s3/tmt2$acs.tot3
+tmt2$acs.s4.tot3 <- tmt2$acs.s4/tmt2$acs.tot3
+
+tmt2$B73.s1.tot4 <- tmt2$B73.s1/tmt2$B73.tot4
+tmt2$B73.s2.tot4 <- tmt2$B73.s2/tmt2$B73.tot4
+tmt2$B73.s3.tot4 <- tmt2$B73.s3/tmt2$B73.tot4
+tmt2$B73.s4.tot4 <- tmt2$B73.s4/tmt2$B73.tot4
+
+tmt2$B73.s2.tot3 <- tmt2$B73.s2/tmt2$B73.tot3
+tmt2$B73.s3.tot3 <- tmt2$B73.s3/tmt2$B73.tot3
+tmt2$B73.s4.tot3 <- tmt2$B73.s4/tmt2$B73.tot3
+
+tmt2$Mo17.s1.tot4 <- tmt2$Mo17.s1/tmt2$Mo17.tot4
+tmt2$Mo17.s2.tot4 <- tmt2$Mo17.s2/tmt2$Mo17.tot4
+tmt2$Mo17.s3.tot4 <- tmt2$Mo17.s3/tmt2$Mo17.tot4
+tmt2$Mo17.s4.tot4 <- tmt2$Mo17.s4/tmt2$Mo17.tot4
+
+tmt2$Mo17.s2.tot3 <- tmt2$Mo17.s2/tmt2$Mo17.tot3
+tmt2$Mo17.s3.tot3 <- tmt2$Mo17.s3/tmt2$Mo17.tot3
+tmt2$Mo17.s4.tot3 <- tmt2$Mo17.s4/tmt2$Mo17.tot3
+
+tmt2$BM.s2.tot3 <- tmt2$BM.s2/tmt2$BM.tot3
+tmt2$BM.s3.tot3 <- tmt2$BM.s3/tmt2$BM.tot3
+tmt2$BM.s4.tot3 <- tmt2$BM.s4/tmt2$BM.tot3
+```
+##heatmap
+```{r}
+library(RColorBrewer)
+```
+```{r}
+tmt2.m <- as.matrix(tmt2[,c("acs.s2.tot3", "acs.s3.tot3", "acs.s4.tot3", "B73.s2.tot3", "B73.s3.tot3", "B73.s4.tot3", "Mo17.s2.tot3", "Mo17.s3.tot3", "Mo17.s4.tot3", "BM.s2.tot3", "BM.s3.tot3", "BM.s4.tot3")])
+
+colnames(tmt2.m) <- c("acs.s2", "acs.s3", "acs.s4", "B73.s2", "B73.s3", "B73.s4", "Mo17.s2", "Mo17.s3", "Mo17.s4", "BM.s2", "BM.s3", "BM.s4")
+
+heatmap(tmt2.m, scale = "none", labRow = "")
+```
+```{r}
+tmt2.m <- as.matrix(tmt2[,c(59:61,65:68)])
+
+colnames(tmt2.m) <- c("BM.MP.s2", "BM.MP.s3", "BM.MP.s4", "acs.B73.s1", "acs.B73.s2", "acs.B73.s3", "acs.B73.s4")
+
+heatmap(tmt2.m, scale = "row", labRow = "", col=cm.colors(10), cexCol = 1)
+
+```
+
+
+```{r}
+tmt2.digenomic.m <- as.matrix(tmt2[tmt2$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs, GOIs$NE.PtRibo, GOIs$PE.ribo),c("acs.s2.tot3", "acs.s3.tot3", "acs.s4.tot3", "B73.s2.tot3", "B73.s3.tot3", "B73.s4.tot3", "Mo17.s2.tot3", "Mo17.s3.tot3", "Mo17.s4.tot3", "BM.s2.tot3", "BM.s3.tot3", "BM.s4.tot3")])
+
+colnames(tmt2.digenomic.m) <- c("acs.s2", "acs.s3", "acs.s4", "B73.s2", "B73.s3", "B73.s4", "Mo17.s2", "Mo17.s3", "Mo17.s4", "BM.s2", "BM.s3", "BM.s4")
+
+heatmap(tmt2.digenomic.m, scale = "none", labRow = "")
+```
+```{r CorFun}
+#using dataframe and vector as input
+CorFun <- function(x, cols1, cols2){
+  cv <- vector(length = nrow(x))
+  for(i in 1:nrow(x)){
+    v1 <- as.numeric(x[i,cols1])
+    v2 <- as.numeric(x[i,cols2])
+    c <- cor(v1, v2, method = "pearson")
+    cv[i]<- c
+  }
+  cv
+}
+```
+
+```{r}
+tmt2$cor.acs.B73 <- CorFun(tmt2, 11:13, 15:17)
+tmt2$cor.acs.Mo17 <- CorFun(tmt2, 11:13, 19:21)
+tmt2$cor.acs.BM <- CorFun(tmt2, 11:13, 22:24)
+tmt2$cor.B73.BM <- CorFun(tmt2,  15:17,22:24)
+```
+```{r}
+mean(tmt2[,"cor.acs.B73"])
+mean(tmt2[,"cor.acs.Mo17"])
+mean(tmt2[,"cor.acs.BM"])
+```
+```{r}
+mean(tmt2[tmt2$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs, GOIs$NE.PtRibo, GOIs$PE.ribo),"cor.acs.B73"])
+mean(tmt2[tmt2$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs, GOIs$NE.PtRibo, GOIs$PE.ribo),"cor.acs.Mo17"])
+mean(tmt2[tmt2$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs, GOIs$NE.PtRibo, GOIs$PE.ribo),"cor.acs.BM"])
+```
+
+```{r}
+tmt2.cor.acs2BM.NOTacs2B73 <- tmt2[tmt2$cor.acs.BM > 0.5 & tmt2$cor.acs.B73 < 0.5 & tmt2$cor.B73.BM < 0.5,]
+tmt2[tmt2$cor.acs.BM > 0.5 & tmt2$cor.acs.B73 < 0.5 & tmt2$cor.B73.BM < 0.5,"Protein"]
+```
+
+
+
+```{r}
+write.csv(na.omit(tmt2[,c(3,1,2,4:9,70:73,10:24)]), "tmt2.cor.all.csv", row.names = F)
+
+write.csv(na.omit(tmt2.cor.acs2BM.NOTacs2B73[,c(3,1,2,4:9,70:73,10:24)]), "tmt2.cor.acs2BM.NOTacs2B73.csv", row.names = F)
+```
+
+
+
+##calculate ratios between sections
+```{r}
+#???
+```
+##plot ratios between sections
+```{r tmt2.s2.tot.s1.tot}
+tmt2.s2.tot.s1.tot <- tmt2[,c("Accession","Gene","l2.acs.s2.tot.acs.s1.tot", "l2.B73.s2.tot.B73.s1.tot","l2.Mo17.s2.tot.Mo17.s1.tot")]
+colnames(tmt2.s2.tot.s1.tot) <- c("Accession","Gene","acs","B73","Mo17")
+tmt2.s2.tot.s1.tot.m <- melt(tmt2.s2.tot.s1.tot)
+
+tmt2.s2.tot.s1.tot.m$Category <- "Other"
+
+tmt2.s2.tot.s1.tot.m$Category[tmt2.s2.tot.s1.tot.m$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)] <- "PhANGs/PhAPGs"
+
+tmt2.s2.tot.s1.tot.m$Category[tmt2.s2.tot.s1.tot.m$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo)] <- "Plastid ribosome"
+
+tmt2.s2.tot.s1.tot.m$Category[tmt2.s2.tot.s1.tot.m$Gene %in% GOIs$EtBio] <- "Ethylene biosynthesis"
+
+tmt2.s2.tot.s1.tot.m$Category[tmt2.s2.tot.s1.tot.m$Gene %in% GOIs$CytoRibo] <- "Cytosolic ribosome"
+
+colors.p2 <- c("Other"="grey50",  "Plastid ribosome"="#6A00EA",  "PhANGs/PhAPGs"="#008275", "Ethylene biosynthesis"="#EF8F6D", "Cytosolic ribosome"="#B50000")
+
+tmt2.s2.tot.s1.tot.m$value[tmt2.s2.tot.s1.tot.m$value <= -5] <- -5
+tmt2.s2.tot.s1.tot.m$value[tmt2.s2.tot.s1.tot.m$value >= 5] <- 5
+
+ggplot(tmt2.s2.tot.s1.tot.m, mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p2, name="")+
+  theme_ridges() +
+  xlim(-5,5)+
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(Section2/Section1)")+
+  guides(col=guide_legend(nrow = 3))+
+  coord_cartesian(clip = "off")
+ggsave("tmt2.s2.tot.s1.tot.png", width = 5, height = 3)
+```
+```{r tmt2.s3.s2}
+tmt2.s3.tot.s2.tot <- tmt2[,c("Accession","Gene","l2.acs.s3.tot.acs.s2.tot", "l2.B73.s3.tot.B73.s2.tot","l2.Mo17.s3.tot.Mo17.s2.tot", "l2.BM.s3.tot.BM.s2.tot")]
+colnames(tmt2.s3.tot.s2.tot) <- c("Accession","Gene","acs","B73","Mo17","BM")
+tmt2.s3.tot.s2.tot.m <- melt(tmt2.s3.tot.s2.tot)
+
+tmt2.s3.tot.s2.tot.m$Category <- "Other"
+
+tmt2.s3.tot.s2.tot.m$Category[tmt2.s3.tot.s2.tot.m$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)] <- "PhANGs/PhAPGs"
+
+tmt2.s3.tot.s2.tot.m$Category[tmt2.s3.tot.s2.tot.m$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo)] <- "Plastid ribosome"
+
+tmt2.s3.tot.s2.tot.m$Category[tmt2.s3.tot.s2.tot.m$Gene %in% GOIs$EtBio] <- "Ethylene biosynthesis"
+
+tmt2.s3.tot.s2.tot.m$Category[tmt2.s3.tot.s2.tot.m$Gene %in% GOIs$CytoRibo] <- "Cytosolic ribosome"
+
+colors.p2 <- c("Other"="grey50",  "Plastid ribosome"="#6A00EA",  "PhANGs/PhAPGs"="#008275", "Ethylene biosynthesis"="#EF8F6D", "Cytosolic ribosome"="#B50000")
+
+tmt2.s3.tot.s2.tot.m$value[tmt2.s3.tot.s2.tot.m$value <= -5] <- -5
+tmt2.s3.tot.s2.tot.m$value[tmt2.s3.tot.s2.tot.m$value >= 5] <- 5
+
+ggplot(tmt2.s3.tot.s2.tot.m, mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p2, name="")+
+  theme_ridges() +
+  xlim(-5,5)+
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(Section3/Section2)")+
+  guides(col=guide_legend(nrow = 3))+
+  coord_cartesian(clip = "off")
+ggsave("tmt2.s3.tot.s2.tot.png", width = 5, height = 3)
+```
+```{r tmt2.s4.tot.s3.tot}
+tmt2.s4.tot.s3.tot <- tmt2[,c("Accession","Gene","l2.acs.s4.tot.acs.s3.tot", "l2.B73.s4.tot.B73.s3.tot","l2.Mo17.s4.tot.Mo17.s3.tot", "l2.BM.s4.tot.BM.s3.tot")]
+colnames(tmt2.s4.tot.s3.tot) <- c("Accession","Gene","acs","B73","Mo17","BM")
+tmt2.s4.tot.s3.tot.m <- melt(tmt2.s4.tot.s3.tot)
+
+tmt2.s4.tot.s3.tot.m$Category <- "Other"
+
+tmt2.s4.tot.s3.tot.m$Category[tmt2.s4.tot.s3.tot.m$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)] <- "PhANGs/PhAPGs"
+
+tmt2.s4.tot.s3.tot.m$Category[tmt2.s4.tot.s3.tot.m$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo)] <- "Plastid ribosome"
+
+tmt2.s4.tot.s3.tot.m$Category[tmt2.s4.tot.s3.tot.m$Gene %in% GOIs$EtBio] <- "Ethylene biosynthesis"
+
+tmt2.s4.tot.s3.tot.m$Category[tmt2.s4.tot.s3.tot.m$Gene %in% GOIs$CytoRibo] <- "Cytosolic ribosome"
+
+colors.p2 <- c("Other"="grey50",  "Plastid ribosome"="#6A00EA",  "PhANGs/PhAPGs"="#008275", "Ethylene biosynthesis"="#EF8F6D", "Cytosolic ribosome"="#B50000")
+
+tmt2.s4.tot.s3.tot.m$value[tmt2.s4.tot.s3.tot.m$value <= -5] <- -5
+tmt2.s4.tot.s3.tot.m$value[tmt2.s4.tot.s3.tot.m$value >= 5] <- 5
+
+ggplot(tmt2.s4.tot.s3.tot.m, mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p2, name="")+
+  theme_ridges() +
+  xlim(-5,5)+
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(Section4/Section3)")+
+  guides(col=guide_legend(nrow = 3))+
+  coord_cartesian(clip = "off")
+ggsave("tmt2.s4.tot.s3.tot.png", width = 5, height = 3)
+```
+
+##calculate ratios between genotypes
+```{r}
+tmt2$MP.s2.tot3 <- rowMeans(tmt2[,c("B73.s2.tot3", "Mo17.s2.tot3")])
+tmt2$MP.s3.tot3 <- rowMeans(tmt2[,c("B73.s3.tot3", "Mo17.s3.tot3")])
+tmt2$MP.s4.tot3 <- rowMeans(tmt2[,c("B73.s4.tot3", "Mo17.s4.tot3")])
+
+tmt2$l2_BM.s2.tot3_MP.s2.tot3 <- log2(tmt2$BM.s2.tot3/tmt2$MP.s2.tot3)
+tmt2$l2_BM.s3.tot3_MP.s3.tot3 <- log2(tmt2$BM.s3.tot3/tmt2$MP.s3.tot3)
+tmt2$l2_BM.s4.tot3_MP.s4.tot3 <- log2(tmt2$BM.s4.tot3/tmt2$MP.s4.tot3)
+
+tmt2$l2_BM.s2.tot3_B73.s2.tot3 <- log2(tmt2$BM.s2.tot3/tmt2$B73.s2.tot3)
+tmt2$l2_BM.s3.tot3_B73.s3.tot3 <- log2(tmt2$BM.s3.tot3/tmt2$B73.s3.tot3)
+tmt2$l2_BM.s4.tot3_B73.s4.tot3 <- log2(tmt2$BM.s4.tot3/tmt2$B73.s4.tot3)
+
+tmt2$l2_acs.s1.tot4_B73.s1.tot4 <- log2(tmt2$acs.s1.tot4/tmt2$B73.s1.tot4)
+tmt2$l2_acs.s2.tot4_B73.s2.tot4 <- log2(tmt2$acs.s2.tot4/tmt2$B73.s2.tot4)
+tmt2$l2_acs.s3.tot4_B73.s3.tot4 <- log2(tmt2$acs.s3.tot4/tmt2$B73.s3.tot4)
+tmt2$l2_acs.s4.tot4_B73.s4.tot4 <- log2(tmt2$acs.s4.tot4/tmt2$B73.s4.tot4)
+
+tmt2$l2_NA <- 0
+```
+
+
+```{r tmt2.BM.MP}
+tmt2.BM.MP <- tmt2[,c("Accession","Gene","l2_NA", "l2_BM.s2.tot3_MP.s2.tot3", "l2_BM.s3.tot3_MP.s3.tot3","l2_BM.s4.tot3_MP.s4.tot3")]
+colnames(tmt2.BM.MP) <- c("Accession","Gene","Section1", "Section2","Section3","Section4")
+tmt2.BM.MP.m <- melt(tmt2.BM.MP)
+
+tmt2.BM.MP.m$Category <- "Other"
+
+tmt2.BM.MP.m$Category[tmt2.BM.MP.m$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)] <- "PhANGs/PhAPGs"
+
+tmt2.BM.MP.m$Category[tmt2.BM.MP.m$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo)] <- "Plastid ribosome"
+
+tmt2.BM.MP.m$Category[tmt2.BM.MP.m$Gene %in% GOIs$EtBio] <- "Ethylene biosynthesis"
+
+tmt2.BM.MP.m$Category[tmt2.BM.MP.m$Gene %in% GOIs$CytoRibo] <- "Cytosolic ribosome"
+
+tmt2.BM.MP.m$Category[tmt2.BM.MP.m$variable=="Section1"] <- "none"
+
+colors.p2 <- c("Other"="grey50",  "Plastid ribosome"="#6A00EA",  "PhANGs/PhAPGs"="#008275", "Ethylene biosynthesis"="#EF8F6D", "Cytosolic ribosome"="#B50000")
+
+tmt2.BM.MP.m$value[tmt2.BM.MP.m$value <= -1.5] <- -1.5
+tmt2.BM.MP.m$value[tmt2.BM.MP.m$value >= 1.5] <- 1.5
+
+ggplot(tmt2.BM.MP.m, mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p2, name="", na.value = "white")+
+  theme_ridges() +
+  xlim(-1.5,1.5)+
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(BM/MP)")+
+  guides(col=guide_legend(nrow = 3))+
+  coord_cartesian(clip = "off", expand = F)
+ggsave("tmt2.BM.MP.png", width = 5, height = 4)
+```
+
+```{r tmt2.BM.B73}
+tmt2.BM.B73 <- tmt2[,c("Accession","Gene","l2_NA", "l2_BM.s2.tot3_B73.s2.tot3", "l2_BM.s3.tot3_B73.s3.tot3","l2_BM.s4.tot3_B73.s4.tot3")]
+colnames(tmt2.BM.B73) <- c("Accession","Gene","Section1", "Section2","Section3","Section4")
+tmt2.BM.B73.m <- melt(tmt2.BM.B73)
+
+tmt2.BM.B73.m$Category <- "Other"
+
+tmt2.BM.B73.m$Category[tmt2.BM.B73.m$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)] <- "PhANGs/PhAPGs"
+
+tmt2.BM.B73.m$Category[tmt2.BM.B73.m$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo)] <- "Plastid ribosome"
+
+tmt2.BM.B73.m$Category[tmt2.BM.B73.m$Gene %in% GOIs$EtBio] <- "Ethylene biosynthesis"
+
+tmt2.BM.B73.m$Category[tmt2.BM.B73.m$Gene %in% GOIs$CytoRibo] <- "Cytosolic ribosome"
+
+tmt2.BM.B73.m$Category[tmt2.BM.B73.m$variable=="Section1"] <- "none"
+
+colors.p2 <- c("Other"="grey50",  "Plastid ribosome"="#6A00EA",  "PhANGs/PhAPGs"="#008275", "Ethylene biosynthesis"="#EF8F6D", "Cytosolic ribosome"="#B50000")
+
+tmt2.BM.B73.m$value[tmt2.BM.B73.m$value <= -1.5] <- -1.5
+tmt2.BM.B73.m$value[tmt2.BM.B73.m$value >= 1.5] <- 1.5
+
+ggplot(tmt2.BM.B73.m, mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p2, name="", na.value = "white")+
+  theme_ridges() +
+  xlim(-1.5,1.5)+
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(BM/B73)")+
+  guides(col=guide_legend(nrow = 3))+
+  coord_cartesian(clip = "off", expand = F)
+ggsave("tmt2.BM.B73.png", width = 5, height = 4)
+```
+
+```{r tmt2.acs.B73}
+tmt2.acs.B73 <- tmt2[,c("Accession","Gene","l2_acs.s1.tot4_B73.s1.tot4","l2_acs.s2.tot4_B73.s2.tot4", "l2_acs.s3.tot4_B73.s3.tot4","l2_acs.s4.tot4_B73.s4.tot4")]
+colnames(tmt2.acs.B73) <- c("Accession","Gene","Section1", "Section2","Section3","Section4")
+tmt2.acs.B73.m <- melt(tmt2.acs.B73)
+
+tmt2.acs.B73.m$Category <- "Other"
+
+tmt2.acs.B73.m$Category[tmt2.acs.B73.m$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)] <- "PhANGs/PhAPGs"
+
+tmt2.acs.B73.m$Category[tmt2.acs.B73.m$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo)] <- "Plastid ribosome"
+
+tmt2.acs.B73.m$Category[tmt2.acs.B73.m$Gene %in% GOIs$EtBio] <- "Ethylene biosynthesis"
+
+tmt2.acs.B73.m$Category[tmt2.acs.B73.m$Gene %in% GOIs$CytoRibo] <- "Cytosolic ribosome"
+
+colors.p2 <- c("Other"="grey50",  "Plastid ribosome"="#6A00EA",  "PhANGs/PhAPGs"="#008275", "Ethylene biosynthesis"="#EF8F6D", "Cytosolic ribosome"="#B50000")
+
+tmt2.acs.B73.m$value[tmt2.acs.B73.m$value <= -1.5] <- -1.5
+tmt2.acs.B73.m$value[tmt2.acs.B73.m$value >= 1.5] <- 1.5
+
+ggplot(tmt2.acs.B73.m, mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p2, name="")+
+  theme_ridges() +
+  xlim(-1.5,1.5)+
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(acs/B73)")+
+  guides(col=guide_legend(nrow = 3))+
+  coord_cartesian(clip = "off", expand = F)
+ggsave("tmt2.acs.B73.png", width = 5, height = 4)
+```
+
+
+##PCA
+```{r}
+colnames(tmt2)
+```
+
+```{r}
+tmt2.pca <- t(tmt2[,c("acs.s2.tot3","acs.s3.tot3","acs.s4.tot3","B73.s2.tot3","B73.s3.tot3","B73.s4.tot3","Mo17.s2.tot3","Mo17.s3.tot3","Mo17.s4.tot3", "BM.s2.tot3","BM.s3.tot3","BM.s4.tot3")])
+colnames(tmt2.pca) <- tmt2$Accession
+tmt2.pca <- scale(tmt2.pca, scale = T, center = F)
+tmt2.pca <- prcomp(tmt2.pca)
+
+tmt2.gt <- c(rep("acs",3), rep("B73",3), rep("Mo17",3), rep("BxM",3))
+
+
+ggbiplot(tmt2.pca, choices = 1:2, var.axes = F, labels = c("acs.s2","acs.s3","acs.s4","B73.s2","B73.s3","B73.s4","Mo17.s2","Mo17.s3","Mo17.s4","BM.s2","BM.s3","BM.s4"), groups = tmt2.gt)+
+  theme_bw()+
+  theme(legend.position = "none")
+```
+```{r}
+tmt2.pca.x <- as.data.frame(tmt2.pca$x)
+tmt2.pca.x$sample <- c("acs.s2","acs.s3","acs.s4","B73.s2","B73.s3","B73.s4","Mo17.s2","Mo17.s3","Mo17.s4","BM.s2","BM.s3","BM.s4")
+tmt2.pca.x$section <- rep(c("s2","s3","s4"),4)
+tmt2.pca.x$genotype <- c(rep("acs",3), rep("B73",3),rep("Mo17",3), rep("BM",3))
+```
+```{r}
+ggplot(tmt2.pca.x, mapping = aes(x = section, y = PC1, color = genotype)) +
+  scale_color_manual(values = c("acs"="#6fa8dc","B73"="#e06666","Mo17"="#ffd966","BM"="#e69138"))+
+  geom_point(size=4)+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+```
+
+```{r}
+plotlist <- list()
+for (i in 1:8) {
+  df <- data.frame("value"=tmt2.pca.x[,i], "sample"=c("acs.s2","acs.s3","acs.s4","B73.s2","B73.s3","B73.s4","Mo17.s2","Mo17.s3","Mo17.s4","BM.s2","BM.s3","BM.s4"), "genotype"=c(rep("acs",3), rep("B73",3),rep("Mo17",3), rep("BM",3)), "section"=rep(c("s2","s3","s4"),4))
+
+plotlist[[i]] <- ggplot(df, mapping = aes(x = section, y = value, color = genotype)) +
+  scale_color_manual(values = c("acs"="#6fa8dc","B73"="#e06666","Mo17"="#ffd966","BM"="#e69138"))+
+  geom_point(size=4)+
+  theme_bw()+
+  geom_hline(yintercept = 0)+
+  ggtitle(paste0("PC",i))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+}
+plotlist
+```
+
+
