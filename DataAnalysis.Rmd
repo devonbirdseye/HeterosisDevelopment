@@ -8,3 +8,697 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+```{r packages}
+library(factoextra)
+library(dplyr)
+library(ggbiplot)
+library(reshape2)
+library(ggridges)
+```
+```{r mgdb}
+#Downloaded from MaizeGDB 2020/05/18, 07:11pm
+mgdb <- read.csv("mgdb.csv", stringsAsFactors = F, header = F)
+colnames(mgdb) <- mgdb[5,]
+mgdb <- mgdb[-c(1:5),]
+```
+```{r Genes Of Interest}
+GOIs <- readRDS("GOIs")
+GOIs$PhANGs <- c(GOIs$PhANGs, "Zm00001d000279")
+```
+#Experiment 1
+##import data
+```{r}
+tmt <- read.csv("B73x5-Mo17x5-BMx5 leaf sections TMT15 111521.csv", stringsAsFactors = F)
+
+tmt <- tmt[-grep("only", tmt$Accession),]
+tmt[tmt==0] <- NA
+tmt <- na.omit(tmt)
+
+tmt$Gene <- substr(tmt$Accession, start = 1, stop = 14)
+tmt <- merge.data.frame(tmt, mgdb[,c("v4_gene_model","Entrez")], by.x="Gene", by.y = "v4_gene_model", all.x = T, all.y = F)
+```
+
+##Changing normalization method (?)
+```{r}
+normF <- c(1,1.18006729476876,1.37937113622264,1.46860614798218,1.33153251665837,1.19116920988042,1.16699836139188,1.53996200344565,1.58522393410753,1.47254695173594,0.851821568490102,1.22377090843489,1.27086418901632,1.45697842359028,1.29980500363454)
+```
+```{r}
+tmt$B73.1 <- tmt$B73.1*normF[1]
+tmt$B73.2 <- tmt$B73.2*normF[2]
+tmt$B73.3 <- tmt$B73.3*normF[3]
+tmt$B73.4 <- tmt$B73.4*normF[4]
+tmt$B73.5 <- tmt$B73.5*normF[5]
+
+tmt$Mo17.1 <- tmt$Mo17.1*normF[6]
+tmt$Mo17.2 <- tmt$Mo17.2*normF[7]
+tmt$Mo17.3 <- tmt$Mo17.3*normF[8]
+tmt$Mo17.4 <- tmt$Mo17.4*normF[9]
+tmt$Mo17.5 <- tmt$Mo17.5*normF[10]
+
+tmt$BM.1 <- tmt$BM.1*normF[11]
+tmt$BM.2 <- tmt$BM.2*normF[12]
+tmt$BM.3 <- tmt$BM.3*normF[13]
+tmt$BM.4 <- tmt$BM.4*normF[14]
+tmt$BM.5 <- tmt$BM.5*normF[15]
+```
+```{r}
+tmt$B73.1 <- tmt$B73.1/sum(tmt$B73.1)
+tmt$B73.2 <- tmt$B73.2/sum(tmt$B73.2)
+tmt$B73.3 <- tmt$B73.3/sum(tmt$B73.3)
+tmt$B73.4 <- tmt$B73.4/sum(tmt$B73.4)
+tmt$B73.5 <- tmt$B73.5/sum(tmt$B73.5)
+
+tmt$Mo17.1 <- tmt$Mo17.1/sum(tmt$Mo17.1)
+tmt$Mo17.2 <- tmt$Mo17.2/sum(tmt$Mo17.2)
+tmt$Mo17.3 <- tmt$Mo17.3/sum(tmt$Mo17.3)
+tmt$Mo17.4 <- tmt$Mo17.4/sum(tmt$Mo17.4)
+tmt$Mo17.5 <- tmt$Mo17.5/sum(tmt$Mo17.5)
+
+tmt$BM.1 <- tmt$BM.1/sum(tmt$BM.1)
+tmt$BM.2 <- tmt$BM.2/sum(tmt$BM.2)
+tmt$BM.3 <- tmt$BM.3/sum(tmt$BM.3)
+tmt$BM.4 <- tmt$BM.4/sum(tmt$BM.4)
+tmt$BM.5 <- tmt$BM.5/sum(tmt$BM.5)
+```
+
+##calculate hyb/MP ratios
+```{r}
+tmt$MP.1 <- rowMeans(tmt[,c("B73.1", "Mo17.1")])
+tmt$MP.2 <- rowMeans(tmt[,c("B73.2", "Mo17.2")])
+tmt$MP.3 <- rowMeans(tmt[,c("B73.3", "Mo17.3")])
+tmt$MP.4 <- rowMeans(tmt[,c("B73.4", "Mo17.4")])
+tmt$MP.5 <- rowMeans(tmt[,c("B73.5", "Mo17.5")])
+
+tmt$l2.BM.1.MP.1 <- log2(tmt$BM.1/tmt$MP.1)
+tmt$l2.BM.2.MP.2 <- log2(tmt$BM.2/tmt$MP.2)
+tmt$l2.BM.3.MP.3 <- log2(tmt$BM.3/tmt$MP.3)
+tmt$l2.BM.4.MP.4 <- log2(tmt$BM.4/tmt$MP.4)
+tmt$l2.BM.5.MP.5 <- log2(tmt$BM.5/tmt$MP.5)
+```
+##calculate B73/Mo17 ratios
+```{r}
+tmt$l2.B73.1.Mo17.1 <- log2(tmt$B73.1/tmt$Mo17.1)
+tmt$l2.B73.2.Mo17.2 <- log2(tmt$B73.2/tmt$Mo17.2)
+tmt$l2.B73.3.Mo17.3 <- log2(tmt$B73.3/tmt$Mo17.3)
+tmt$l2.B73.4.Mo17.4 <- log2(tmt$B73.4/tmt$Mo17.4)
+tmt$l2.B73.5.Mo17.5 <- log2(tmt$B73.5/tmt$Mo17.5)
+```
+
+```{r}
+write.csv(na.omit(tmt[!tmt$Entrez=="",c("Gene","Accession","Entrez")]), row.names = F, "tmt.EnrichmentBackground.csv")
+```
+##PCA
+```{r}
+tmt.pca <- t(tmt[,2:16])
+colnames(tmt.pca) <- tmt$Accession
+tmt.pca <- scale(tmt.pca, scale = T, center = F)
+tmt.pca <- prcomp(tmt.pca)
+```
+```{r}
+fviz_eig(tmt.pca, addlabels = TRUE)
+#ggsave("LeafSectionsScree.png", width = 7, height = 5)
+```
+```{r}
+tmt.gt <- c(rep("B73",5), rep("Mo17",5), rep("BxM",5))
+```
+```{r}
+ggbiplot(tmt.pca, var.axes = F, labels = colnames(tmt[,2:16]), groups = tmt.gt)+
+  theme_bw()+
+  theme(legend.position = "none")
+#ggsave("LeafSectionsPCA.png", width = 4, height = 4)
+```
+
+```{r}
+tmt.pca.var <- get_pca_var(tmt.pca)
+tmt.pca.var.contrib <- as.data.frame(tmt.pca.var$contrib)
+
+
+tmt.pca.var.contrib$Accession <- rownames(tmt.pca.var.contrib)
+tmt.pca.var.contrib$Gene <- substr(tmt.pca.var.contrib$Accession, start = 1, stop = 14)
+tmt.pca.var.contrib$Category <- "Other"
+tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$plastid] <- "Plastid-localized"
+tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$PhANGs] <- "PhANGs"
+tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$PhAPGs] <- "PhAPGs"
+tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$NE.PtRibo] <- "NE plastid ribosome"
+tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$PE.ribo] <- "PE plastid ribosome"
+tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$EtBio] <- "Ethylene biosynthesis"
+
+tmt.pca.var.contrib.Dim1 <- merge.data.frame(tmt.pca.var.contrib[,c("Accession", "Category", "Dim.1")], tmt[,c("Accession", "Gene", "Entrez", "Protein")], by.x = "Accession", by.y = "Accession", all.x = T, all.y = F)
+tmt.pca.var.contrib.Dim1 <- tmt.pca.var.contrib.Dim1[order(-tmt.pca.var.contrib.Dim1$Dim.1),]
+write.csv(tmt.pca.var.contrib.Dim1, row.names = F, "tmt.pca.var.contrib.Dim1.csv")
+
+tmt.pca.var.contrib.Dim2 <- merge.data.frame(tmt.pca.var.contrib[,c("Accession", "Category", "Dim.2")], tmt[,c("Accession", "Gene", "Entrez", "Protein")], by.x = "Accession", by.y = "Accession", all.x = T, all.y = F)
+tmt.pca.var.contrib.Dim2 <- tmt.pca.var.contrib.Dim2[order(-tmt.pca.var.contrib.Dim2$Dim.2),]
+write.csv(tmt.pca.var.contrib.Dim2, row.names = F, "tmt.pca.var.contrib.Dim2.csv")
+```
+
+
+```{r}
+tmt.pca.var.contrib$Category <- factor(tmt.pca.var.contrib$Category, levels = c("Other", "Plastid-localized", "Ethylene biosynthesis","PE plastid ribosome", "NE plastid ribosome", "PhAPGs","PhANGs"))
+ggplot(tmt.pca.var.contrib, mapping=aes(y=Category, x=Dim.1, fill = stat(x)))+
+  geom_density_ridges_gradient(size=1) +
+  scale_fill_viridis_c(option = "C")+
+  theme_ridges() +
+  theme(axis.text =element_text(size=8), axis.title = element_text(size=8), legend.position = "none", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=8))+
+  xlim(0,max(tmt.pca.var.contrib$Dim.1))+
+  coord_cartesian(expand = F)
+```
+```{r}
+ggplot(tmt.pca.var.contrib, mapping=aes(y=Category, x=Dim.2, fill = stat(x)))+
+  geom_density_ridges_gradient(alpha=0.7) +
+  scale_fill_viridis_c(option = "B")+
+  theme_ridges() +
+  theme(axis.text =element_text(size=8), axis.title = element_text(size=8), legend.position = "none", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=8))
+```
+##Expression Heterosis Density Curves
+```{r}
+tmt.BM.MP <- tmt[,c("Gene","l2.BM.1.MP.1", "l2.BM.2.MP.2","l2.BM.3.MP.3","l2.BM.4.MP.4","l2.BM.5.MP.5")]
+colnames(tmt.BM.MP) <- c("Gene","Section1", "Section2","Section3","Section4","Section5")
+tmt.BM.MP.m <- melt(tmt.BM.MP)
+
+tmt.BM.MP.m$Category <- "Other"
+
+tmt.BM.MP.m$Category[tmt.BM.MP.m$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)] <- "PhANGs/PhAPGs"
+
+tmt.BM.MP.m$Category[tmt.BM.MP.m$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo)] <- "Plastid ribosome"
+
+
+tmt.BM.MP.m$Category[tmt.BM.MP.m$Gene %in% GOIs$CytoRibo] <- "Cytosolic ribosome"
+
+
+colors.p2 <- c("Other"="grey50",  "Plastid ribosome"="#6A00EA",  "PhANGs/PhAPGs"="#008275", "Cytosolic ribosome"="#B50000")
+
+tmt.BM.MP.m$value[tmt.BM.MP.m$value <= -2] <- -2
+tmt.BM.MP.m$value[tmt.BM.MP.m$value >= 2] <- 2
+
+ggplot(tmt.BM.MP.m, mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p2, name="")+
+  theme_ridges() +
+  xlim(-2,2)+
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(BM/MP)")+
+  guides(col=guide_legend(nrow = 2))+
+  coord_cartesian(clip = "off", expand = F)
+ggsave("tmt.BM.MP.png", width = 4, height = 5)
+```
+
+```{r}
+tmt.BM.MP <- tmt[,c("Gene","l2.BM.2.MP.2","l2.BM.3.MP.3","l2.BM.4.MP.4","l2.BM.5.MP.5")]
+colnames(tmt.BM.MP) <- c("Gene","Section1", "Section2","Section3","Section4")
+tmt.BM.MP.m <- melt(tmt.BM.MP)
+
+tmt.BM.MP.m$Category <- "Other"
+
+tmt.BM.MP.m$Category[tmt.BM.MP.m$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)] <- "PhANGs/PhAPGs"
+
+tmt.BM.MP.m$Category[tmt.BM.MP.m$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo)] <- "Plastid ribosome"
+
+
+tmt.BM.MP.m$Category[tmt.BM.MP.m$Gene %in% GOIs$CytoRibo] <- "Cytosolic ribosome"
+
+
+colors.p2 <- c("Other"="grey50",  "Plastid ribosome"="#6A00EA",  "PhANGs/PhAPGs"="#008275", "Cytosolic ribosome"="#B50000")
+
+tmt.BM.MP.m$value[tmt.BM.MP.m$value <= -2] <- -2
+tmt.BM.MP.m$value[tmt.BM.MP.m$value >= 2] <- 2
+
+ggplot(tmt.BM.MP.m, mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p2, name="")+
+  theme_ridges() +
+  xlim(-2,2)+
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(BM/MP)")+
+  guides(col=guide_legend(nrow = 2))+
+  coord_cartesian(clip = "off", expand = F)
+ggsave("tmt.BM.MP.4sectionsOnly.png", width = 4, height = 5)
+```
+
+```{r}
+tmt.BM.MP <- tmt[,c("Accession","Gene","l2.BM.1.MP.1", "l2.BM.2.MP.2","l2.BM.3.MP.3","l2.BM.4.MP.4","l2.BM.5.MP.5")]
+colnames(tmt.BM.MP) <- c("Accession","Gene","Section1","Section2","Section3","Section4","Section5")
+tmt.BM.MP.m <- melt(tmt.BM.MP)
+
+tmt.BM.MP.m$Category <- "Other"
+tmt.BM.MP.m$Order <- 1
+
+tmt.BM.MP.m$Category[tmt.BM.MP.m$Gene %in% GOIs$plastid] <- "Plastid-localized"
+tmt.BM.MP.m$Order[tmt.BM.MP.m$Gene %in% GOIs$plastid] <- 2
+
+tmt.BM.MP.m$Category[tmt.BM.MP.m$Gene %in% GOIs$PhANGs] <- "PhANGs"
+tmt.BM.MP.m$Order[tmt.BM.MP.m$Gene %in% GOIs$PhANGs] <- 3
+
+tmt.BM.MP.m$Category[tmt.BM.MP.m$Gene %in% GOIs$PhAPGs] <- "PhAPGs"
+tmt.BM.MP.m$Order[tmt.BM.MP.m$Gene %in% GOIs$PhAPGs] <- 4
+
+tmt.BM.MP.m$Category[tmt.BM.MP.m$Gene %in% GOIs$NE.PtRibo] <- "NE plastid ribosome"
+tmt.BM.MP.m$Order[tmt.BM.MP.m$Gene %in% GOIs$NE.PtRibo] <- 5
+
+tmt.BM.MP.m$Category[tmt.BM.MP.m$Gene %in% GOIs$PE.ribo] <- "PE plastid ribosome"
+tmt.BM.MP.m$Order[tmt.BM.MP.m$Gene %in% GOIs$PE.ribo] <- 6
+
+colors.p <- c("Other"="#656565", "Plastid-localized"="black", "PE plastid ribosome"="#6A00EA", "NE plastid ribosome"="#E5A3FF", "PhAPGs"="#008275", "PhANGs"="#81E401")
+
+tmt.BM.MP.m$value[tmt.BM.MP.m$value > 2] <- 2
+tmt.BM.MP.m$value[tmt.BM.MP.m$value < -2] <- -2
+
+ggplot(tmt.BM.MP.m[tmt.BM.MP.m$Category %in% c("Plastid-localized","PhANGs","PhAPGs"),], mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p[c("Plastid-localized","PhANGs","PhAPGs")], name="")+
+  theme_ridges() +
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(BM/MP)")+
+  xlim(-2,2)
+ggsave("LeafSections_PhAGs_BM_MP.jpg", width = 5, height = 6)
+
+ggplot(tmt.BM.MP.m[tmt.BM.MP.m$Category %in% c("Plastid-localized","NE plastid ribosome","PE plastid ribosome"),], mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p[c("Plastid-localized","NE plastid ribosome","PE plastid ribosome")], name="")+
+  theme_ridges() +
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(BM/MP)")+
+  xlim(-2,2)
+ggsave("LeafSections_pRibo_BM_MP.jpg", width = 5, height = 6)
+```
+```{r}
+tmt.BM.MP <- tmt[,c("Accession","Gene","l2.BM.1.MP.1", "l2.BM.2.MP.2","l2.BM.3.MP.3","l2.BM.4.MP.4","l2.BM.5.MP.5")]
+colnames(tmt.BM.MP) <- c("Accession","Gene","Section1","Section2","Section3","Section4","Section5")
+tmt.BM.MP.m <- melt(tmt.BM.MP)
+
+tmt.BM.MP.m$Category <- "Other"
+tmt.BM.MP.m$Order <- 1
+
+tmt.BM.MP.m$Category[tmt.BM.MP.m$Gene %in% GOIs$EtBio] <- "Ethylene biosynthesis"
+tmt.BM.MP.m$Order[tmt.BM.MP.m$Gene %in% GOIs$EtBio] <-2
+
+tmt.BM.MP.m$Category[tmt.BM.MP.m$Gene %in% GOIs$CytoRibo] <- "Cytosolic ribosome"
+tmt.BM.MP.m$Order[tmt.BM.MP.m$Gene %in% GOIs$CytoRibo] <-3
+
+colors.p <- c("Other"="#656565",  "Cytosolic ribosome"="#B50000", "Ethylene biosynthesis"="#EF8F6D")
+
+tmt.BM.MP.m$value[tmt.BM.MP.m$value > 2] <- 2
+tmt.BM.MP.m$value[tmt.BM.MP.m$value < -2] <- -2
+
+
+ggplot(tmt.BM.MP.m, mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p, name="")+
+  theme_ridges() +
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(BM/MP)")+
+  xlim(-2,2)
+ggsave("LeafSections_Cyto_BM_MP.jpg", width = 5, height = 6)
+```
+
+##Parent expression density curves
+```{r}
+tmt.B73.Mo17 <- tmt[,c("Accession","Gene","l2.B73.1.Mo17.1", "l2.B73.2.Mo17.2","l2.B73.3.Mo17.3","l2.B73.4.Mo17.4","l2.B73.5.Mo17.5")]
+colnames(tmt.B73.Mo17) <- c("Accession","Gene","Section1","Section2","Section3","Section4","Section5")
+tmt.B73.Mo17.m <- melt(tmt.B73.Mo17)
+
+tmt.B73.Mo17.m$Category <- "Other"
+tmt.B73.Mo17.m$Order <- 1
+
+tmt.B73.Mo17.m$Category[tmt.B73.Mo17.m$Gene %in% GOIs$plastid] <- "Plastid-localized"
+tmt.B73.Mo17.m$Order[tmt.B73.Mo17.m$Gene %in% GOIs$plastid] <- 2
+
+tmt.B73.Mo17.m$Category[tmt.B73.Mo17.m$Gene %in% GOIs$PhANGs] <- "PhANGs"
+tmt.B73.Mo17.m$Order[tmt.B73.Mo17.m$Gene %in% GOIs$PhANGs] <- 3
+
+tmt.B73.Mo17.m$Category[tmt.B73.Mo17.m$Gene %in% GOIs$PhAPGs] <- "PhAPGs"
+tmt.B73.Mo17.m$Order[tmt.B73.Mo17.m$Gene %in% GOIs$PhAPGs] <- 4
+
+tmt.B73.Mo17.m$Category[tmt.B73.Mo17.m$Gene %in% GOIs$NE.PtRibo] <- "NE plastid ribosome"
+tmt.B73.Mo17.m$Order[tmt.B73.Mo17.m$Gene %in% GOIs$NE.PtRibo] <- 5
+
+tmt.B73.Mo17.m$Category[tmt.B73.Mo17.m$Gene %in% GOIs$PE.ribo] <- "PE plastid ribosome"
+tmt.B73.Mo17.m$Order[tmt.B73.Mo17.m$Gene %in% GOIs$PE.ribo] <- 6
+
+tmt.B73.Mo17.m$Category[tmt.B73.Mo17.m$Gene %in% GOIs$EtBio] <- "Ethylene biosynthesis"
+tmt.B73.Mo17.m$Order[tmt.B73.Mo17.m$Gene %in% GOIs$EtBio] <-7
+
+tmt.B73.Mo17.m$Category[tmt.B73.Mo17.m$Gene %in% GOIs$CytoRibo] <- "Cytosolic ribosome"
+tmt.B73.Mo17.m$Order[tmt.B73.Mo17.m$Gene %in% GOIs$CytoRibo] <-8
+
+colors.p <- c("Other"="#656565", "Plastid-localized"="black", "Cytosolic ribosome"="#B50000", "PE plastid ribosome"="#6A00EA", "NE plastid ribosome"="#E5A3FF", "PhAPGs"="#008275", "PhANGs"="#81E401", "Ethylene biosynthesis"="#EF8F6D")
+
+tmt.B73.Mo17.m$value[tmt.B73.Mo17.m$value > 2] <- 2
+tmt.B73.Mo17.m$value[tmt.B73.Mo17.m$value < -2] <- -2
+
+ggplot(tmt.B73.Mo17.m[tmt.B73.Mo17.m$Category %in% c("Plastid-localized","PhANGs","PhAPGs"),], mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p[c("Plastid-localized","PhANGs","PhAPGs")], name="")+
+  theme_ridges() +
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(B73/Mo17)")+
+  xlim(-2,2)
+ggsave("LeafSections_PhAGs_B73_Mo17.jpg", width = 5, height = 6)
+
+ggplot(tmt.B73.Mo17.m[tmt.B73.Mo17.m$Category %in% c("Plastid-localized","NE plastid ribosome","PE plastid ribosome"),], mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p[c("Plastid-localized","NE plastid ribosome","PE plastid ribosome")], name="")+
+  theme_ridges() +
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(B73/Mo17)")+
+  xlim(-2,2)
+ggsave("LeafSections_pRibo_B73_Mo17.jpg", width = 5, height = 6)
+
+ggplot(tmt.B73.Mo17.m[tmt.B73.Mo17.m$Category %in% c("Other","Cytosolic ribosome","Ethylene biosynthesis"),], mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p[c("Other","Cytosolic ribosome","Ethylene biosynthesis")], name="")+
+  theme_ridges() +
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(B73/Mo17)")+
+  xlim(-2,2)
+ggsave("LeafSections_Cyto_B73_Mo17.jpg", width = 5, height = 6)
+```
+
+##only additive proteins
+
+```{r}
+tmt.additive.up.1 <- tmt[tmt$BM.1.MP.1 > 1.1,]
+tmt.additive.up.2 <- tmt[tmt$BM.2.MP.2 > 1.1,]
+tmt.additive.up.3 <- tmt[tmt$BM.3.MP.3 > 1.1,]
+tmt.additive.up.4 <- tmt[tmt$BM.4.MP.4 > 1.1,]
+tmt.additive.up.5 <- tmt[tmt$BM.5.MP.5 > 1.1,]
+
+tmt.additive.down.1 <- tmt[tmt$BM.1.MP.1 < 0.9,]
+tmt.additive.down.2 <- tmt[tmt$BM.2.MP.2 < 0.9,]
+tmt.additive.down.3 <- tmt[tmt$BM.3.MP.3 < 0.9,]
+tmt.additive.down.4 <- tmt[tmt$BM.4.MP.4 < 0.9,]
+tmt.additive.down.5 <- tmt[tmt$BM.5.MP.5 < 0.9,]
+```
+```{r}
+tmt.additive.up.intersect <- tmt[tmt$Accession %in% Reduce(intersect, list(tmt.additive.up.1$Accession, tmt.additive.up.2$Accession, tmt.additive.up.3$Accession, tmt.additive.up.4$Accession, tmt.additive.up.5$Accession)),]
+write.csv(tmt.additive.up.intersect[,c("Accession","Entrez","Protein")], "tmt.additive.up.intersect.csv")
+
+tmt.additive.up.intersect.pca <- t(tmt.additive.up.intersect[,2:16])
+colnames(tmt.additive.up.intersect.pca) <- tmt.additive.up.intersect$Accession
+tmt.additive.up.intersect.pca <- scale(tmt.additive.up.intersect.pca, scale = T, center = F)
+tmt.additive.up.intersect.pca <- prcomp(tmt.additive.up.intersect.pca)
+
+ggbiplot(tmt.additive.up.intersect.pca, var.axes = F, labels = colnames(tmt.additive.up.intersect[,2:16]), groups = tmt.gt)+
+  theme_bw()+
+  theme(legend.position = "none")
+ggsave("LeafSections_additive.up.intersect_PCA.png", width = 4, height = 4)
+```
+
+
+```{r}
+atlas.cpm <- read.csv("aag1125_supportingfile_table_s1.csv", stringsAsFactors = F)
+```
+
+```{r}
+NATpairs <- read.csv("NATpairs.csv", stringsAsFactors = F)
+```
+```{r}
+colnames(NATpairs)
+```
+
+```{r}
+colnames(NATpairs) <- c("sense","antisense")
+```
+
+```{r}
+NATpairs.grmzm <- NATpairs[grep("GRMZM", NATpairs$sense),]
+NATpairs.grmzm <- NATpairs.grmzm[grep("GRMZM", NATpairs.grmzm$antisense),]
+```
+```{r}
+nrow(NATpairs.grmzm)
+```
+```{r}
+atlas.dnsaf <- read.csv("aag1125_supportingfile_table_s2.csv", stringsAsFactors = F)
+```
+
+
+```{r}
+NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm, atlas.cpm[,c("tracking_id","Mature.Leaf.8")], by.x = "sense", by.y = "tracking_id", all.x = F, all.y = F)
+NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm.cpm, atlas.cpm[,c("tracking_id","Mature.Leaf.8")], by.x = "antisense", by.y = "tracking_id", all.x = F, all.y = F)
+colnames(NATpairs.grmzm.cpm) <- c("antisense", "sense", "MLsense.cpm","MLantisense.cpm")
+
+NATpairs.grmzm.cpm.dnsaf <- merge.data.frame(NATpairs.grmzm.cpm, atlas.dnsaf[,c("Gene.ID..Group.Leader.","Mature.Leaf.8")], by.x = "sense", by.y = "Gene.ID..Group.Leader.", all.x = T, all.y = F)
+colnames(NATpairs.grmzm.cpm.dnsaf)[5] <- "MLsense.dnsaf"
+
+NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[,c("sense","antisense","MLsense.cpm", "MLantisense.cpm", "MLsense.dnsaf")]
+
+NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$MLsense.cpm==0,]
+NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$MLantisense.cpm==0,]
+
+NATpairs.grmzm.cpm.dnsaf$MLsense.antisense.cpm <- NATpairs.grmzm.cpm.dnsaf$MLsense.cpm/NATpairs.grmzm.cpm.dnsaf$MLantisense.cpm
+
+NATpairs.grmzm.cpm.dnsaf.atlas <- (merge.data.frame(NATpairs.grmzm.cpm.dnsaf, atlas.cpm[,c("tracking_id", "Gene_Set", "gene_biotype", "Syntany.")], by.x = "sense", by.y = "tracking_id", all=F))
+
+NATpairs.grmzm.cpm.dnsaf.atlas <- NATpairs.grmzm.cpm.dnsaf.atlas[order(NATpairs.grmzm.cpm.dnsaf.atlas$MLsense.antisense.cpm),]
+
+write.csv(NATpairs.grmzm.cpm.dnsaf.atlas, "NATpairs.grmzm.MatureLeaf.cpm.dnsaf.atlas.csv", row.names = F)
+```
+
+```{r}
+NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm, atlas.cpm[,c("tracking_id","Primary.Root.5.Days")], by.x = "sense", by.y = "tracking_id", all.x = F, all.y = F)
+NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm.cpm, atlas.cpm[,c("tracking_id","Primary.Root.5.Days")], by.x = "antisense", by.y = "tracking_id", all.x = F, all.y = F)
+colnames(NATpairs.grmzm.cpm) <- c("antisense", "sense", "PRsense.cpm","PRantisense.cpm")
+
+NATpairs.grmzm.cpm.dnsaf <- merge.data.frame(NATpairs.grmzm.cpm, atlas.dnsaf[,c("Gene.ID..Group.Leader.","Primary.Root.5.Days")], by.x = "sense", by.y = "Gene.ID..Group.Leader.", all.x = T, all.y = F)
+colnames(NATpairs.grmzm.cpm.dnsaf)[5] <- "PRsense.dnsaf"
+
+NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[,c("sense","antisense","PRsense.cpm", "PRantisense.cpm", "PRsense.dnsaf")]
+
+NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$PRsense.cpm==0,]
+NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$PRantisense.cpm==0,]
+
+NATpairs.grmzm.cpm.dnsaf$PRsense.antisense.cpm <- NATpairs.grmzm.cpm.dnsaf$PRsense.cpm/NATpairs.grmzm.cpm.dnsaf$PRantisense.cpm
+
+NATpairs.grmzm.cpm.dnsaf.atlas <- (merge.data.frame(NATpairs.grmzm.cpm.dnsaf, atlas.cpm[,c("tracking_id", "Gene_Set", "gene_biotype", "Syntany.")], by.x = "sense", by.y = "tracking_id", all=F))
+
+NATpairs.grmzm.cpm.dnsaf.atlas <- NATpairs.grmzm.cpm.dnsaf.atlas[order(NATpairs.grmzm.cpm.dnsaf.atlas$PRsense.antisense.cpm),]
+
+write.csv(NATpairs.grmzm.cpm.dnsaf.atlas, "NATpairs.grmzm.PrimaryRoot.cpm.dnsaf.atlas.csv", row.names = F)
+```
+
+```{r}
+NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm, atlas.cpm[,c("tracking_id","Silk")], by.x = "sense", by.y = "tracking_id", all.x = F, all.y = F)
+NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm.cpm, atlas.cpm[,c("tracking_id","Silk")], by.x = "antisense", by.y = "tracking_id", all.x = F, all.y = F)
+colnames(NATpairs.grmzm.cpm) <- c("antisense", "sense", "Silksense.cpm","Silkantisense.cpm")
+
+NATpairs.grmzm.cpm.dnsaf <- merge.data.frame(NATpairs.grmzm.cpm, atlas.dnsaf[,c("Gene.ID..Group.Leader.","Silk..unpollinated.")], by.x = "sense", by.y = "Gene.ID..Group.Leader.", all.x = T, all.y = F)
+colnames(NATpairs.grmzm.cpm.dnsaf)[5] <- "Silksense.dnsaf"
+
+NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[,c("sense","antisense","Silksense.cpm", "Silkantisense.cpm", "Silksense.dnsaf")]
+
+NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$Silksense.cpm==0,]
+NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$Silkantisense.cpm==0,]
+
+NATpairs.grmzm.cpm.dnsaf$Silksense.antisense.cpm <- NATpairs.grmzm.cpm.dnsaf$Silksense.cpm/NATpairs.grmzm.cpm.dnsaf$Silkantisense.cpm
+
+NATpairs.grmzm.cpm.dnsaf.atlas <- (merge.data.frame(NATpairs.grmzm.cpm.dnsaf, atlas.cpm[,c("tracking_id", "Gene_Set", "gene_biotype", "Syntany.")], by.x = "sense", by.y = "tracking_id", all=F))
+
+NATpairs.grmzm.cpm.dnsaf.atlas <- NATpairs.grmzm.cpm.dnsaf.atlas[order(NATpairs.grmzm.cpm.dnsaf.atlas$Silksense.antisense.cpm),]
+
+write.csv(NATpairs.grmzm.cpm.dnsaf.atlas, "NATpairs.grmzm.Silk.cpm.dnsaf.atlas.csv", row.names = F)
+```
+
+```{r}
+NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm, atlas.cpm$[,c("tracking_id","Mature.Leaf.8")], by.x = "sense", by.y = "tracking_id", all.x = F, all.y = F)
+NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm.cpm, atlas.cpm[,c("tracking_id","Mature.Leaf.8")], by.x = "antisense", by.y = "tracking_id", all.x = F, all.y = F)
+colnames(NATpairs.grmzm.cpm) <- c("antisense", "sense", "MLsense.cpm","MLantisense.cpm")
+
+NATpairs.grmzm.cpm.dnsaf <- merge.data.frame(NATpairs.grmzm.cpm, atlas.dnsaf[,c("Gene.ID..Group.Leader.","Mature.Leaf.8")], by.x = "sense", by.y = "Gene.ID..Group.Leader.", all.x = T, all.y = F)
+colnames(NATpairs.grmzm.cpm.dnsaf)[5] <- "MLsense.dnsaf"
+
+NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[,c("sense","antisense","MLsense.cpm", "MLantisense.cpm", "MLsense.dnsaf")]
+
+NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$MLsense.cpm==0,]
+NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$MLantisense.cpm==0,]
+
+NATpairs.grmzm.cpm.dnsaf$MLsense.antisense.cpm <- NATpairs.grmzm.cpm.dnsaf$MLsense.cpm/NATpairs.grmzm.cpm.dnsaf$MLantisense.cpm
+
+NATpairs.grmzm.cpm.dnsaf.atlas <- (merge.data.frame(NATpairs.grmzm.cpm.dnsaf, atlas.cpm[,c("tracking_id", "Gene_Set", "gene_biotype", "Syntany.")], by.x = "sense", by.y = "tracking_id", all=F))
+
+NATpairs.grmzm.cpm.dnsaf.atlas <- NATpairs.grmzm.cpm.dnsaf.atlas[order(NATpairs.grmzm.cpm.dnsaf.atlas$MLsense.antisense.cpm),]
+
+write.csv(NATpairs.grmzm.cpm.dnsaf.atlas, "NATpairs.grmzm.MatureLeaf.cpm.dnsaf.atlas.csv", row.names = F)
+```
+
+```{r}
+median(NATpairs.grmzm.cpm.dnsaf.atlas$MLsense.antisense.cpm[NATpairs.grmzm.cpm.dnsaf.atlas$Syntany.=="Non-Syntenic"], na.rm = T)
+```
+
+```{r}
+median(NATpairs.grmzm.cpm.dnsaf.atlas$MLsense.antisense.cpm[NATpairs.grmzm.cpm.dnsaf.atlas$Syntany.=="Syntenic"], na.rm = T)
+```
+```{r}
+NATpairs.grmzm.cpm.dnsaf.atlas[!is.na(NATpairs.grmzm.cpm.dnsaf.atlas$Syntany.),]
+```
+
+```{r}
+ggplot(NATpairs.grmzm.cpm.dnsaf.atlas[!is.na(NATpairs.grmzm.cpm.dnsaf.atlas$Syntany.),], mapping = aes(x=Syntany., y=MLsense.antisense.cpm))+
+  geom_violin()+
+  xlab("Syntany")+
+  ylab("sense/antisense cpm")
+ggsave("MatureLeaf_Sense2Antisense_Syntany_Violin.png", width = 5, height = 8)
+```
+
+
+```{r}
+NATpairs.grmzm.cpm.dnsaf.atlas[NATpairs.grmzm.cpm.dnsaf.atlas$Syntany.=="Non-Syntenic",]
+```
+```{r}
+NATpairs.grmzm.cpm.dnsaf.atlas.cor <- NATpairs.grmzm.cpm.dnsaf.atlas
+```
+```{r}
+NATpairs.grmzm.cpm.dnsaf.atlas.cor$MLsense.dnsaf[is.na(NATpairs.grmzm.cpm.dnsaf.atlas.cor$MLsense.dnsaf)] <- 0
+```
+```{r}
+cor(NATpairs.grmzm.cpm.dnsaf.atlas.cor$MLsense.antisense.cpm, NATpairs.grmzm.cpm.dnsaf.atlas.cor$MLsense.dnsaf)
+```
+
+
+```{r}
+NATpairs.grmzm.cpm.dnsaf.atlas.cor
+```
+
+
+
+```{r}
+NATpairs.grmzm.cpm.dnsaf$MLsense.antisense.cpm <- NATpairs.grmzm.cpm.dnsaf$MLsense.cpm/NATpairs.grmzm.cpm.dnsaf$MLantisense.cpm
+```
+```{r}
+cor(x=NATpairs.grmzm.cpm.dnsaf$MLsense.antisense.cpm, y = NATpairs.grmzm.cpm.dnsaf$MLsense.dnsaf)
+```
+
+```{r}
+ggplot(data = NATpairs.grmzm.cpm.dnsaf, mapping = aes(x=MLsense.antisense.cpm, y=MLsense.dnsaf))+
+  geom_point()
+```
+
+
+```{r}
+tmt.additive.down.intersect <- tmt[tmt$Accession %in% Reduce(intersect, list(tmt.additive.down.1$Accession, tmt.additive.down.2$Accession, tmt.additive.down.3$Accession, tmt.additive.down.4$Accession, tmt.additive.down.5$Accession)),]
+write.csv(tmt.additive.down.intersect[,c("Accession","Entrez","Protein")], "tmt.additive.down.intersect.csv")
+
+tmt.additive.down.intersect.pca <- t(tmt.additive.down.intersect[,2:16])
+colnames(tmt.additive.down.intersect.pca) <- tmt.additive.down.intersect$Accession
+tmt.additive.down.intersect.pca <- scale(tmt.additive.down.intersect.pca, scale = T, center = F)
+tmt.additive.down.intersect.pca <- prcomp(tmt.additive.down.intersect.pca)
+
+ggbiplot(tmt.additive.down.intersect.pca, var.axes = F, labels = colnames(tmt.additive.down.intersect[,2:16]), groups = tmt.gt)+
+  theme_bw()+
+  theme(legend.position = "none")
+ggsave("LeafSections_additive.down.intersect_PCA.png", width = 4, height = 4)
+```
+
+```{r}
+tmt.additive.up.union <- tmt[tmt$Accession %in% unique(c(tmt.additive.up.1$Accession, tmt.additive.up.2$Accession, tmt.additive.up.3$Accession, tmt.additive.up.4$Accession, tmt.additive.up.5$Accession)),]
+write.csv(tmt.additive.up.union[,c("Accession","Entrez","Protein")], "tmt.additive.up.union.csv")
+
+tmt.additive.up.union.pca <- t(tmt.additive.up.union[,2:16])
+colnames(tmt.additive.up.union.pca) <- tmt.additive.up.union$Accession
+tmt.additive.up.union.pca <- scale(tmt.additive.up.union.pca, scale = T, center = F)
+tmt.additive.up.union.pca <- prcomp(tmt.additive.up.union.pca)
+
+ggbiplot(tmt.additive.up.union.pca, var.axes = F, labels = colnames(tmt.additive.up.union[,2:16]), groups = tmt.gt)+
+  theme_bw()+
+  theme(legend.position = "none")
+ggsave("LeafSections_additive.up.union_PCA.png", width = 4, height = 4)
+```
+
+```{r}
+tmt.additive.down.union <- tmt[tmt$Accession %in% unique(c(tmt.additive.down.1$Accession, tmt.additive.down.2$Accession, tmt.additive.down.3$Accession, tmt.additive.down.4$Accession, tmt.additive.down.5$Accession)),]
+write.csv(tmt.additive.down.union[,c("Accession","Entrez","Protein")], "tmt.additive.down.union.csv")
+
+tmt.additive.down.union.pca <- t(tmt.additive.down.union[,2:16])
+colnames(tmt.additive.down.union.pca) <- tmt.additive.down.union$Accession
+tmt.additive.down.union.pca <- scale(tmt.additive.down.union.pca, scale = T, center = F)
+tmt.additive.down.union.pca <- prcomp(tmt.additive.down.union.pca)
+
+ggbiplot(tmt.additive.down.union.pca, var.axes = F, labels = colnames(tmt.additive.down.union[,2:16]), groups = tmt.gt)+
+  theme_bw()+
+  theme(legend.position = "none")
+ggsave("LeafSections_additive.down.union_PCA.png", width = 4, height = 4)
+```
+
+
+
+
+
+
+```{r}
+length(tmt$Accession)
+```
+```{r}
+length(unique(c(tmt.additive.up.1$Accession, tmt.additive.up.2$Accession, tmt.additive.up.3$Accession, tmt.additive.up.4$Accession, tmt.additive.up.5$Accession)))
+```
+```{r}
+length(Reduce(intersect, list(tmt.additive.up.1$Accession, tmt.additive.up.2$Accession, tmt.additive.up.3$Accession, tmt.additive.up.4$Accession, tmt.additive.up.5$Accession)))
+```
+```{r}
+length(unique(c(tmt.additive.down.1$Accession, tmt.additive.down.2$Accession, tmt.additive.down.3$Accession, tmt.additive.down.4$Accession, tmt.additive.down.5$Accession)))
+```
+```{r}
+length(Reduce(intersect, list(tmt.additive.down.1$Accession, tmt.additive.down.2$Accession, tmt.additive.down.3$Accession, tmt.additive.down.4$Accession, tmt.additive.down.5$Accession)))
+```
+
+```{r}
+additive.up <- data.frame("section"= c("S1","S2","S3","S4","S5"), "up"=c(nrow(tmt.additive.up.1), nrow(tmt.additive.up.2), nrow(tmt.additive.up.3), nrow(tmt.additive.up.4), nrow(tmt.additive.up.5)), "down"=c(nrow(tmt.additive.down.1), nrow(tmt.additive.down.2), nrow(tmt.additive.down.3), nrow(tmt.additive.down.4), nrow(tmt.additive.down.5)))
+additive.up.m <- melt(additive.up)
+```
+```{r}
+ggplot(additive.up.m, mapping = aes(x=section, y=value, fill=variable))+
+  geom_col(position = "dodge")+
+  theme_bw()+
+  ylab("number of additive proteins")
+ggsave("NumberOfAdditiveProteinsAcrossSections.png", width = 4, height = 3)
+```
+
+##only protein categories
+```{r}
+tmt.pca <- t(tmt[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),2:16])
+colnames(tmt.pca) <- tmt$Accession[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
+tmt.pca <- scale(tmt.pca, scale = T, center = F)
+tmt.pca <- prcomp(tmt.pca)
+
+ggbiplot(tmt.pca, var.axes = F, labels = colnames(tmt[,2:16]), groups = tmt.gt)+
+  theme_bw()+
+  theme(legend.position = "none")+
+  xlim(-1.75,1.25)
+ggsave("LeafSections_PhANGsPhAPGs_PCA.png", width = 4, height = 4)
+```
+```{r}
+tmt.pca <- t(tmt[tmt$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo),2:16])
+colnames(tmt.pca) <- tmt$Accession[tmt$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo)]
+tmt.pca <- scale(tmt.pca, scale = T, center = F)
+tmt.pca <- prcomp(tmt.pca)
+
+ggbiplot(tmt.pca, var.axes = F, labels = colnames(tmt[,2:16]), groups = tmt.gt)+
+  theme_bw()+
+  theme(legend.position = "none")+
+  xlim(-2,1.25)
+ggsave("LeafSections_pRibo_PCA.png", width = 4, height = 4)
+```
+```{r}
+tmt.pca <- t(tmt[tmt$Gene %in% GOIs$EtBio,2:16])
+colnames(tmt.pca) <- tmt$Accession[tmt$Gene %in% GOIs$EtBio]
+tmt.pca <- scale(tmt.pca, scale = T, center = F)
+tmt.pca <- prcomp(tmt.pca)
+
+ggbiplot(tmt.pca, var.axes = F, labels = colnames(tmt[,2:16]), groups = tmt.gt)+
+  theme_bw()+
+  theme(legend.position = "none")+
+  xlim(-2,1.25)
+ggsave("LeafSections_EtBio_PCA.png", width = 4, height = 4)
+```
+
+
+
+
+
+
