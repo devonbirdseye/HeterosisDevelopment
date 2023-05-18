@@ -27,22 +27,137 @@ GOIs$PhANGs <- c(GOIs$PhANGs, "Zm00001d000279")
 ```
 #Experiment 1
 ##import data
-```{r}
+```{r import}
 tmt <- read.csv("B73x5-Mo17x5-BMx5 leaf sections TMT15 111521.csv", stringsAsFactors = F)
 
-tmt <- tmt[-grep("only", tmt$Accession),]
-tmt[tmt==0] <- NA
-tmt <- na.omit(tmt)
-
 tmt$Gene <- substr(tmt$Accession, start = 1, stop = 14)
-tmt <- merge.data.frame(tmt, mgdb[,c("v4_gene_model","Entrez")], by.x="Gene", by.y = "v4_gene_model", all.x = T, all.y = F)
 ```
+```{r remove unwanted data}
+n <- nrow(tmt)
+print(c("total proteins =", n), quote = F)
+#remove non-maize proteins
+tmt <- tmt[(grep("Zm|Zema|Zeam", tmt$Accession)),]
+n2 <- nrow(tmt)
+print(c("non-maize proteins removed =", (n-n2)), quote = F)
+#remove polymorphic proteins
+tmt.pm <- tmt[grep("only", tmt$Accession),]
+tmt <- tmt[-grep("only", tmt$Accession),]
+n3 <- nrow(tmt)
+print(c("polymorphic proteins removed =", (n2-n3)), quote = F)
+#remove rows with missing tmt data
+for(i in 2:16){
+tmt <- tmt[!tmt[,i]==0,]
+}
+n4 <- nrow(tmt)
+print(c("proteins with missing data removed =", (n3-n4)), quote = F)
+print(c("remaining proteins =", n4), quote = F)
+```
+```{r add Entrez numbers}
+##manually assign organelle-encoded accessions
+organelleEntrez <- tmt[grep("Zema|Zeam", tmt$Gene),]
+organelleEntrez <- data.frame("Gene"=organelleEntrez$Gene, "Entrez"=NA)
+##assign chloroplast accessions
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp003.1"] <- "845178"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp004.1"] <- "845232"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp008.1"] <- "845201"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp013.1"] <- "845225"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp014.1"] <- "845226"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp016.1"] <- "845236"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp017.1"] <- "845174"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp018.1"] <- "845173"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp019.1"] <- "845172"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp019.1"] <- "845172"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp021.1"] <- "845229"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp022.1"] <- "845196"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp023.1"] <- "845195"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp024.1"] <- "1466361"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp026.1"] <- "845238"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp027.1"] <- "845189"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp028.1"] <- "845190"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp029.1"] <- "845182"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp030.1"] <- "845171"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp032.1"] <- "845212"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp035.1"] <- "845175"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp036.1"] <- "845191"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp039.1"] <- "845204"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp040.1"] <- "845203"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp043.1"] <- "845198"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp044.1"] <- "845222"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp045.1"] <- "845233"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp046.1"] <- "845217"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp047.1"] <- "845176"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp048.1"] <- "845200"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp050.1"] <- "845211"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp051.1"] <- "845205"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp052.1"] <- "845192"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp053.1"] <- "845193"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp054.1"] <- "845224"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp055.1"] <- "845228"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp056.1"] <- "845223"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp057.1"] <- "845177"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp058.1"] <- "845241"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp059.1"] <- "845213"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp060.1"] <- "845214"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp061.1"] <- "845237"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp062.1"] <- "845218"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp063.1"] <- "845235"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp065.1"] <- "845216"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp067.1"] <- "845220"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp075.1"] <- "845181"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp082.1"] <- "845230"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp083.1"] <- "845185"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp084.1"] <- "845221"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp085.1"] <- "1466378"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp086.1"] <- "845183"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp087.1"] <- "1466379"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp088.1"] <- "845184"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp090.1"] <- "845188"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp091.1"] <- "845179"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp092.1"] <- "845187"
+##assign mitochondrial accessions
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp008.1"] <- "4055864"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp024.1"] <- "4055860"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp032.1"] <- "4055888"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp033.1"] <- "4055938"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp036.1"] <- "4055894"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp050.1"] <- "4055956"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp051.1"] <- "4055881"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp057.1"] <- "4055973"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp081.1"] <- "4055890"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp092.1"] <- "4055837"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp097.1"] <- "4055857"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp098.1"] <- "4055896"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp113.1"] <- "4055802"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp119.1"] <- "4055928"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp129.1"] <- "4055878"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp136.1"] <- "4056004"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp159.1"] <- "4055794"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp167.1"] <- "4056007"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp179.1"] <- "4056006"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp185.1"] <- "4055892"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp157.1"] <- "4056008"
+organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp107.1"] <- "4056003"
+##add organelle entrez to mgdb-assigned Entrez numbers 
+Entrez <- mgdb[,c(1,12)]
+colnames(Entrez) <- c("Gene", "Entrez")
+Entrez <- Entrez[!Entrez$Entrez=="",]
+Entrez <- rbind(Entrez, organelleEntrez)
+Entrez <- unique(Entrez)
+saveRDS(Entrez, "Entrez")
+#add Entrez to data
+tmt <- join(x = tmt, y = Entrez, by = "Gene", type="left", match="first")
+```
+```{r}
+#check that none were missed
+tmt[grep("Zema|Zeam", tmt$Gene),c("Gene","Entrez")]
+```
+
+
 
 ##Changing normalization method (?)
 ```{r}
 normF <- c(1,1.18006729476876,1.37937113622264,1.46860614798218,1.33153251665837,1.19116920988042,1.16699836139188,1.53996200344565,1.58522393410753,1.47254695173594,0.851821568490102,1.22377090843489,1.27086418901632,1.45697842359028,1.29980500363454)
-```
-```{r}
+
 tmt$B73.1 <- tmt$B73.1*normF[1]
 tmt$B73.2 <- tmt$B73.2*normF[2]
 tmt$B73.3 <- tmt$B73.3*normF[3]
@@ -60,8 +175,7 @@ tmt$BM.2 <- tmt$BM.2*normF[12]
 tmt$BM.3 <- tmt$BM.3*normF[13]
 tmt$BM.4 <- tmt$BM.4*normF[14]
 tmt$BM.5 <- tmt$BM.5*normF[15]
-```
-```{r}
+
 tmt$B73.1 <- tmt$B73.1/sum(tmt$B73.1)
 tmt$B73.2 <- tmt$B73.2/sum(tmt$B73.2)
 tmt$B73.3 <- tmt$B73.3/sum(tmt$B73.3)
@@ -104,11 +218,13 @@ tmt$l2.B73.4.Mo17.4 <- log2(tmt$B73.4/tmt$Mo17.4)
 tmt$l2.B73.5.Mo17.5 <- log2(tmt$B73.5/tmt$Mo17.5)
 ```
 
-```{r}
+```{r save table of entrez numbers for all detected genes}
 write.csv(na.omit(tmt[!tmt$Entrez=="",c("Gene","Accession","Entrez")]), row.names = F, "tmt.EnrichmentBackground.csv")
 ```
 ##PCA
+
 ```{r}
+colnames(tmt)
 tmt.pca <- t(tmt[,2:16])
 colnames(tmt.pca) <- tmt$Accession
 tmt.pca <- scale(tmt.pca, scale = T, center = F)
@@ -151,6 +267,7 @@ tmt.pca.var.contrib.Dim2 <- merge.data.frame(tmt.pca.var.contrib[,c("Accession",
 tmt.pca.var.contrib.Dim2 <- tmt.pca.var.contrib.Dim2[order(-tmt.pca.var.contrib.Dim2$Dim.2),]
 write.csv(tmt.pca.var.contrib.Dim2, row.names = F, "tmt.pca.var.contrib.Dim2.csv")
 ```
+
 
 
 ```{r}
@@ -381,328 +498,6 @@ ggplot(tmt.B73.Mo17.m[tmt.B73.Mo17.m$Category %in% c("Other","Cytosolic ribosome
   xlim(-2,2)
 ggsave("LeafSections_Cyto_B73_Mo17.jpg", width = 5, height = 6)
 ```
-
-##only additive proteins
-
-```{r}
-tmt.additive.up.1 <- tmt[tmt$BM.1.MP.1 > 1.1,]
-tmt.additive.up.2 <- tmt[tmt$BM.2.MP.2 > 1.1,]
-tmt.additive.up.3 <- tmt[tmt$BM.3.MP.3 > 1.1,]
-tmt.additive.up.4 <- tmt[tmt$BM.4.MP.4 > 1.1,]
-tmt.additive.up.5 <- tmt[tmt$BM.5.MP.5 > 1.1,]
-
-tmt.additive.down.1 <- tmt[tmt$BM.1.MP.1 < 0.9,]
-tmt.additive.down.2 <- tmt[tmt$BM.2.MP.2 < 0.9,]
-tmt.additive.down.3 <- tmt[tmt$BM.3.MP.3 < 0.9,]
-tmt.additive.down.4 <- tmt[tmt$BM.4.MP.4 < 0.9,]
-tmt.additive.down.5 <- tmt[tmt$BM.5.MP.5 < 0.9,]
-```
-```{r}
-tmt.additive.up.intersect <- tmt[tmt$Accession %in% Reduce(intersect, list(tmt.additive.up.1$Accession, tmt.additive.up.2$Accession, tmt.additive.up.3$Accession, tmt.additive.up.4$Accession, tmt.additive.up.5$Accession)),]
-write.csv(tmt.additive.up.intersect[,c("Accession","Entrez","Protein")], "tmt.additive.up.intersect.csv")
-
-tmt.additive.up.intersect.pca <- t(tmt.additive.up.intersect[,2:16])
-colnames(tmt.additive.up.intersect.pca) <- tmt.additive.up.intersect$Accession
-tmt.additive.up.intersect.pca <- scale(tmt.additive.up.intersect.pca, scale = T, center = F)
-tmt.additive.up.intersect.pca <- prcomp(tmt.additive.up.intersect.pca)
-
-ggbiplot(tmt.additive.up.intersect.pca, var.axes = F, labels = colnames(tmt.additive.up.intersect[,2:16]), groups = tmt.gt)+
-  theme_bw()+
-  theme(legend.position = "none")
-ggsave("LeafSections_additive.up.intersect_PCA.png", width = 4, height = 4)
-```
-
-
-```{r}
-atlas.cpm <- read.csv("aag1125_supportingfile_table_s1.csv", stringsAsFactors = F)
-```
-
-```{r}
-NATpairs <- read.csv("NATpairs.csv", stringsAsFactors = F)
-```
-```{r}
-colnames(NATpairs)
-```
-
-```{r}
-colnames(NATpairs) <- c("sense","antisense")
-```
-
-```{r}
-NATpairs.grmzm <- NATpairs[grep("GRMZM", NATpairs$sense),]
-NATpairs.grmzm <- NATpairs.grmzm[grep("GRMZM", NATpairs.grmzm$antisense),]
-```
-```{r}
-nrow(NATpairs.grmzm)
-```
-```{r}
-atlas.dnsaf <- read.csv("aag1125_supportingfile_table_s2.csv", stringsAsFactors = F)
-```
-
-
-```{r}
-NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm, atlas.cpm[,c("tracking_id","Mature.Leaf.8")], by.x = "sense", by.y = "tracking_id", all.x = F, all.y = F)
-NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm.cpm, atlas.cpm[,c("tracking_id","Mature.Leaf.8")], by.x = "antisense", by.y = "tracking_id", all.x = F, all.y = F)
-colnames(NATpairs.grmzm.cpm) <- c("antisense", "sense", "MLsense.cpm","MLantisense.cpm")
-
-NATpairs.grmzm.cpm.dnsaf <- merge.data.frame(NATpairs.grmzm.cpm, atlas.dnsaf[,c("Gene.ID..Group.Leader.","Mature.Leaf.8")], by.x = "sense", by.y = "Gene.ID..Group.Leader.", all.x = T, all.y = F)
-colnames(NATpairs.grmzm.cpm.dnsaf)[5] <- "MLsense.dnsaf"
-
-NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[,c("sense","antisense","MLsense.cpm", "MLantisense.cpm", "MLsense.dnsaf")]
-
-NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$MLsense.cpm==0,]
-NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$MLantisense.cpm==0,]
-
-NATpairs.grmzm.cpm.dnsaf$MLsense.antisense.cpm <- NATpairs.grmzm.cpm.dnsaf$MLsense.cpm/NATpairs.grmzm.cpm.dnsaf$MLantisense.cpm
-
-NATpairs.grmzm.cpm.dnsaf.atlas <- (merge.data.frame(NATpairs.grmzm.cpm.dnsaf, atlas.cpm[,c("tracking_id", "Gene_Set", "gene_biotype", "Syntany.")], by.x = "sense", by.y = "tracking_id", all=F))
-
-NATpairs.grmzm.cpm.dnsaf.atlas <- NATpairs.grmzm.cpm.dnsaf.atlas[order(NATpairs.grmzm.cpm.dnsaf.atlas$MLsense.antisense.cpm),]
-
-write.csv(NATpairs.grmzm.cpm.dnsaf.atlas, "NATpairs.grmzm.MatureLeaf.cpm.dnsaf.atlas.csv", row.names = F)
-```
-
-```{r}
-NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm, atlas.cpm[,c("tracking_id","Primary.Root.5.Days")], by.x = "sense", by.y = "tracking_id", all.x = F, all.y = F)
-NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm.cpm, atlas.cpm[,c("tracking_id","Primary.Root.5.Days")], by.x = "antisense", by.y = "tracking_id", all.x = F, all.y = F)
-colnames(NATpairs.grmzm.cpm) <- c("antisense", "sense", "PRsense.cpm","PRantisense.cpm")
-
-NATpairs.grmzm.cpm.dnsaf <- merge.data.frame(NATpairs.grmzm.cpm, atlas.dnsaf[,c("Gene.ID..Group.Leader.","Primary.Root.5.Days")], by.x = "sense", by.y = "Gene.ID..Group.Leader.", all.x = T, all.y = F)
-colnames(NATpairs.grmzm.cpm.dnsaf)[5] <- "PRsense.dnsaf"
-
-NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[,c("sense","antisense","PRsense.cpm", "PRantisense.cpm", "PRsense.dnsaf")]
-
-NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$PRsense.cpm==0,]
-NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$PRantisense.cpm==0,]
-
-NATpairs.grmzm.cpm.dnsaf$PRsense.antisense.cpm <- NATpairs.grmzm.cpm.dnsaf$PRsense.cpm/NATpairs.grmzm.cpm.dnsaf$PRantisense.cpm
-
-NATpairs.grmzm.cpm.dnsaf.atlas <- (merge.data.frame(NATpairs.grmzm.cpm.dnsaf, atlas.cpm[,c("tracking_id", "Gene_Set", "gene_biotype", "Syntany.")], by.x = "sense", by.y = "tracking_id", all=F))
-
-NATpairs.grmzm.cpm.dnsaf.atlas <- NATpairs.grmzm.cpm.dnsaf.atlas[order(NATpairs.grmzm.cpm.dnsaf.atlas$PRsense.antisense.cpm),]
-
-write.csv(NATpairs.grmzm.cpm.dnsaf.atlas, "NATpairs.grmzm.PrimaryRoot.cpm.dnsaf.atlas.csv", row.names = F)
-```
-
-```{r}
-NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm, atlas.cpm[,c("tracking_id","Silk")], by.x = "sense", by.y = "tracking_id", all.x = F, all.y = F)
-NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm.cpm, atlas.cpm[,c("tracking_id","Silk")], by.x = "antisense", by.y = "tracking_id", all.x = F, all.y = F)
-colnames(NATpairs.grmzm.cpm) <- c("antisense", "sense", "Silksense.cpm","Silkantisense.cpm")
-
-NATpairs.grmzm.cpm.dnsaf <- merge.data.frame(NATpairs.grmzm.cpm, atlas.dnsaf[,c("Gene.ID..Group.Leader.","Silk..unpollinated.")], by.x = "sense", by.y = "Gene.ID..Group.Leader.", all.x = T, all.y = F)
-colnames(NATpairs.grmzm.cpm.dnsaf)[5] <- "Silksense.dnsaf"
-
-NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[,c("sense","antisense","Silksense.cpm", "Silkantisense.cpm", "Silksense.dnsaf")]
-
-NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$Silksense.cpm==0,]
-NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$Silkantisense.cpm==0,]
-
-NATpairs.grmzm.cpm.dnsaf$Silksense.antisense.cpm <- NATpairs.grmzm.cpm.dnsaf$Silksense.cpm/NATpairs.grmzm.cpm.dnsaf$Silkantisense.cpm
-
-NATpairs.grmzm.cpm.dnsaf.atlas <- (merge.data.frame(NATpairs.grmzm.cpm.dnsaf, atlas.cpm[,c("tracking_id", "Gene_Set", "gene_biotype", "Syntany.")], by.x = "sense", by.y = "tracking_id", all=F))
-
-NATpairs.grmzm.cpm.dnsaf.atlas <- NATpairs.grmzm.cpm.dnsaf.atlas[order(NATpairs.grmzm.cpm.dnsaf.atlas$Silksense.antisense.cpm),]
-
-write.csv(NATpairs.grmzm.cpm.dnsaf.atlas, "NATpairs.grmzm.Silk.cpm.dnsaf.atlas.csv", row.names = F)
-```
-
-```{r}
-NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm, atlas.cpm$[,c("tracking_id","Mature.Leaf.8")], by.x = "sense", by.y = "tracking_id", all.x = F, all.y = F)
-NATpairs.grmzm.cpm <- merge.data.frame(NATpairs.grmzm.cpm, atlas.cpm[,c("tracking_id","Mature.Leaf.8")], by.x = "antisense", by.y = "tracking_id", all.x = F, all.y = F)
-colnames(NATpairs.grmzm.cpm) <- c("antisense", "sense", "MLsense.cpm","MLantisense.cpm")
-
-NATpairs.grmzm.cpm.dnsaf <- merge.data.frame(NATpairs.grmzm.cpm, atlas.dnsaf[,c("Gene.ID..Group.Leader.","Mature.Leaf.8")], by.x = "sense", by.y = "Gene.ID..Group.Leader.", all.x = T, all.y = F)
-colnames(NATpairs.grmzm.cpm.dnsaf)[5] <- "MLsense.dnsaf"
-
-NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[,c("sense","antisense","MLsense.cpm", "MLantisense.cpm", "MLsense.dnsaf")]
-
-NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$MLsense.cpm==0,]
-NATpairs.grmzm.cpm.dnsaf <- NATpairs.grmzm.cpm.dnsaf[!NATpairs.grmzm.cpm.dnsaf$MLantisense.cpm==0,]
-
-NATpairs.grmzm.cpm.dnsaf$MLsense.antisense.cpm <- NATpairs.grmzm.cpm.dnsaf$MLsense.cpm/NATpairs.grmzm.cpm.dnsaf$MLantisense.cpm
-
-NATpairs.grmzm.cpm.dnsaf.atlas <- (merge.data.frame(NATpairs.grmzm.cpm.dnsaf, atlas.cpm[,c("tracking_id", "Gene_Set", "gene_biotype", "Syntany.")], by.x = "sense", by.y = "tracking_id", all=F))
-
-NATpairs.grmzm.cpm.dnsaf.atlas <- NATpairs.grmzm.cpm.dnsaf.atlas[order(NATpairs.grmzm.cpm.dnsaf.atlas$MLsense.antisense.cpm),]
-
-write.csv(NATpairs.grmzm.cpm.dnsaf.atlas, "NATpairs.grmzm.MatureLeaf.cpm.dnsaf.atlas.csv", row.names = F)
-```
-
-```{r}
-median(NATpairs.grmzm.cpm.dnsaf.atlas$MLsense.antisense.cpm[NATpairs.grmzm.cpm.dnsaf.atlas$Syntany.=="Non-Syntenic"], na.rm = T)
-```
-
-```{r}
-median(NATpairs.grmzm.cpm.dnsaf.atlas$MLsense.antisense.cpm[NATpairs.grmzm.cpm.dnsaf.atlas$Syntany.=="Syntenic"], na.rm = T)
-```
-```{r}
-NATpairs.grmzm.cpm.dnsaf.atlas[!is.na(NATpairs.grmzm.cpm.dnsaf.atlas$Syntany.),]
-```
-
-```{r}
-ggplot(NATpairs.grmzm.cpm.dnsaf.atlas[!is.na(NATpairs.grmzm.cpm.dnsaf.atlas$Syntany.),], mapping = aes(x=Syntany., y=MLsense.antisense.cpm))+
-  geom_violin()+
-  xlab("Syntany")+
-  ylab("sense/antisense cpm")
-ggsave("MatureLeaf_Sense2Antisense_Syntany_Violin.png", width = 5, height = 8)
-```
-
-
-```{r}
-NATpairs.grmzm.cpm.dnsaf.atlas[NATpairs.grmzm.cpm.dnsaf.atlas$Syntany.=="Non-Syntenic",]
-```
-```{r}
-NATpairs.grmzm.cpm.dnsaf.atlas.cor <- NATpairs.grmzm.cpm.dnsaf.atlas
-```
-```{r}
-NATpairs.grmzm.cpm.dnsaf.atlas.cor$MLsense.dnsaf[is.na(NATpairs.grmzm.cpm.dnsaf.atlas.cor$MLsense.dnsaf)] <- 0
-```
-```{r}
-cor(NATpairs.grmzm.cpm.dnsaf.atlas.cor$MLsense.antisense.cpm, NATpairs.grmzm.cpm.dnsaf.atlas.cor$MLsense.dnsaf)
-```
-
-
-```{r}
-NATpairs.grmzm.cpm.dnsaf.atlas.cor
-```
-
-
-
-```{r}
-NATpairs.grmzm.cpm.dnsaf$MLsense.antisense.cpm <- NATpairs.grmzm.cpm.dnsaf$MLsense.cpm/NATpairs.grmzm.cpm.dnsaf$MLantisense.cpm
-```
-```{r}
-cor(x=NATpairs.grmzm.cpm.dnsaf$MLsense.antisense.cpm, y = NATpairs.grmzm.cpm.dnsaf$MLsense.dnsaf)
-```
-
-```{r}
-ggplot(data = NATpairs.grmzm.cpm.dnsaf, mapping = aes(x=MLsense.antisense.cpm, y=MLsense.dnsaf))+
-  geom_point()
-```
-
-
-```{r}
-tmt.additive.down.intersect <- tmt[tmt$Accession %in% Reduce(intersect, list(tmt.additive.down.1$Accession, tmt.additive.down.2$Accession, tmt.additive.down.3$Accession, tmt.additive.down.4$Accession, tmt.additive.down.5$Accession)),]
-write.csv(tmt.additive.down.intersect[,c("Accession","Entrez","Protein")], "tmt.additive.down.intersect.csv")
-
-tmt.additive.down.intersect.pca <- t(tmt.additive.down.intersect[,2:16])
-colnames(tmt.additive.down.intersect.pca) <- tmt.additive.down.intersect$Accession
-tmt.additive.down.intersect.pca <- scale(tmt.additive.down.intersect.pca, scale = T, center = F)
-tmt.additive.down.intersect.pca <- prcomp(tmt.additive.down.intersect.pca)
-
-ggbiplot(tmt.additive.down.intersect.pca, var.axes = F, labels = colnames(tmt.additive.down.intersect[,2:16]), groups = tmt.gt)+
-  theme_bw()+
-  theme(legend.position = "none")
-ggsave("LeafSections_additive.down.intersect_PCA.png", width = 4, height = 4)
-```
-
-```{r}
-tmt.additive.up.union <- tmt[tmt$Accession %in% unique(c(tmt.additive.up.1$Accession, tmt.additive.up.2$Accession, tmt.additive.up.3$Accession, tmt.additive.up.4$Accession, tmt.additive.up.5$Accession)),]
-write.csv(tmt.additive.up.union[,c("Accession","Entrez","Protein")], "tmt.additive.up.union.csv")
-
-tmt.additive.up.union.pca <- t(tmt.additive.up.union[,2:16])
-colnames(tmt.additive.up.union.pca) <- tmt.additive.up.union$Accession
-tmt.additive.up.union.pca <- scale(tmt.additive.up.union.pca, scale = T, center = F)
-tmt.additive.up.union.pca <- prcomp(tmt.additive.up.union.pca)
-
-ggbiplot(tmt.additive.up.union.pca, var.axes = F, labels = colnames(tmt.additive.up.union[,2:16]), groups = tmt.gt)+
-  theme_bw()+
-  theme(legend.position = "none")
-ggsave("LeafSections_additive.up.union_PCA.png", width = 4, height = 4)
-```
-
-```{r}
-tmt.additive.down.union <- tmt[tmt$Accession %in% unique(c(tmt.additive.down.1$Accession, tmt.additive.down.2$Accession, tmt.additive.down.3$Accession, tmt.additive.down.4$Accession, tmt.additive.down.5$Accession)),]
-write.csv(tmt.additive.down.union[,c("Accession","Entrez","Protein")], "tmt.additive.down.union.csv")
-
-tmt.additive.down.union.pca <- t(tmt.additive.down.union[,2:16])
-colnames(tmt.additive.down.union.pca) <- tmt.additive.down.union$Accession
-tmt.additive.down.union.pca <- scale(tmt.additive.down.union.pca, scale = T, center = F)
-tmt.additive.down.union.pca <- prcomp(tmt.additive.down.union.pca)
-
-ggbiplot(tmt.additive.down.union.pca, var.axes = F, labels = colnames(tmt.additive.down.union[,2:16]), groups = tmt.gt)+
-  theme_bw()+
-  theme(legend.position = "none")
-ggsave("LeafSections_additive.down.union_PCA.png", width = 4, height = 4)
-```
-
-
-
-
-
-
-```{r}
-length(tmt$Accession)
-```
-```{r}
-length(unique(c(tmt.additive.up.1$Accession, tmt.additive.up.2$Accession, tmt.additive.up.3$Accession, tmt.additive.up.4$Accession, tmt.additive.up.5$Accession)))
-```
-```{r}
-length(Reduce(intersect, list(tmt.additive.up.1$Accession, tmt.additive.up.2$Accession, tmt.additive.up.3$Accession, tmt.additive.up.4$Accession, tmt.additive.up.5$Accession)))
-```
-```{r}
-length(unique(c(tmt.additive.down.1$Accession, tmt.additive.down.2$Accession, tmt.additive.down.3$Accession, tmt.additive.down.4$Accession, tmt.additive.down.5$Accession)))
-```
-```{r}
-length(Reduce(intersect, list(tmt.additive.down.1$Accession, tmt.additive.down.2$Accession, tmt.additive.down.3$Accession, tmt.additive.down.4$Accession, tmt.additive.down.5$Accession)))
-```
-
-```{r}
-additive.up <- data.frame("section"= c("S1","S2","S3","S4","S5"), "up"=c(nrow(tmt.additive.up.1), nrow(tmt.additive.up.2), nrow(tmt.additive.up.3), nrow(tmt.additive.up.4), nrow(tmt.additive.up.5)), "down"=c(nrow(tmt.additive.down.1), nrow(tmt.additive.down.2), nrow(tmt.additive.down.3), nrow(tmt.additive.down.4), nrow(tmt.additive.down.5)))
-additive.up.m <- melt(additive.up)
-```
-```{r}
-ggplot(additive.up.m, mapping = aes(x=section, y=value, fill=variable))+
-  geom_col(position = "dodge")+
-  theme_bw()+
-  ylab("number of additive proteins")
-ggsave("NumberOfAdditiveProteinsAcrossSections.png", width = 4, height = 3)
-```
-
-##only protein categories
-```{r}
-tmt.pca <- t(tmt[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),2:16])
-colnames(tmt.pca) <- tmt$Accession[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
-tmt.pca <- scale(tmt.pca, scale = T, center = F)
-tmt.pca <- prcomp(tmt.pca)
-
-ggbiplot(tmt.pca, var.axes = F, labels = colnames(tmt[,2:16]), groups = tmt.gt)+
-  theme_bw()+
-  theme(legend.position = "none")+
-  xlim(-1.75,1.25)
-ggsave("LeafSections_PhANGsPhAPGs_PCA.png", width = 4, height = 4)
-```
-```{r}
-tmt.pca <- t(tmt[tmt$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo),2:16])
-colnames(tmt.pca) <- tmt$Accession[tmt$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo)]
-tmt.pca <- scale(tmt.pca, scale = T, center = F)
-tmt.pca <- prcomp(tmt.pca)
-
-ggbiplot(tmt.pca, var.axes = F, labels = colnames(tmt[,2:16]), groups = tmt.gt)+
-  theme_bw()+
-  theme(legend.position = "none")+
-  xlim(-2,1.25)
-ggsave("LeafSections_pRibo_PCA.png", width = 4, height = 4)
-```
-```{r}
-tmt.pca <- t(tmt[tmt$Gene %in% GOIs$EtBio,2:16])
-colnames(tmt.pca) <- tmt$Accession[tmt$Gene %in% GOIs$EtBio]
-tmt.pca <- scale(tmt.pca, scale = T, center = F)
-tmt.pca <- prcomp(tmt.pca)
-
-ggbiplot(tmt.pca, var.axes = F, labels = colnames(tmt[,2:16]), groups = tmt.gt)+
-  theme_bw()+
-  theme(legend.position = "none")+
-  xlim(-2,1.25)
-ggsave("LeafSections_EtBio_PCA.png", width = 4, height = 4)
-```
-
-
-
-
-
-
-
 
 #Experiment 2
 ##import data
