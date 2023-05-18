@@ -52,98 +52,9 @@ n4 <- nrow(tmt)
 print(c("proteins with missing data removed =", (n3-n4)), quote = F)
 print(c("remaining proteins =", n4), quote = F)
 ```
+
 ```{r add Entrez numbers}
-##manually assign organelle-encoded accessions
-organelleEntrez <- tmt[grep("Zema|Zeam", tmt$Gene),]
-organelleEntrez <- data.frame("Gene"=organelleEntrez$Gene, "Entrez"=NA)
-##assign chloroplast accessions
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp003.1"] <- "845178"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp004.1"] <- "845232"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp008.1"] <- "845201"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp013.1"] <- "845225"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp014.1"] <- "845226"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp016.1"] <- "845236"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp017.1"] <- "845174"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp018.1"] <- "845173"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp019.1"] <- "845172"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp019.1"] <- "845172"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp021.1"] <- "845229"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp022.1"] <- "845196"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp023.1"] <- "845195"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp024.1"] <- "1466361"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp026.1"] <- "845238"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp027.1"] <- "845189"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp028.1"] <- "845190"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp029.1"] <- "845182"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp030.1"] <- "845171"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp032.1"] <- "845212"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp035.1"] <- "845175"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp036.1"] <- "845191"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp039.1"] <- "845204"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp040.1"] <- "845203"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp043.1"] <- "845198"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp044.1"] <- "845222"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp045.1"] <- "845233"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp046.1"] <- "845217"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp047.1"] <- "845176"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp048.1"] <- "845200"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp050.1"] <- "845211"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp051.1"] <- "845205"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp052.1"] <- "845192"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp053.1"] <- "845193"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp054.1"] <- "845224"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp055.1"] <- "845228"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp056.1"] <- "845223"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp057.1"] <- "845177"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp058.1"] <- "845241"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp059.1"] <- "845213"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp060.1"] <- "845214"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp061.1"] <- "845237"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp062.1"] <- "845218"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp063.1"] <- "845235"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp065.1"] <- "845216"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp067.1"] <- "845220"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp075.1"] <- "845181"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp082.1"] <- "845230"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp083.1"] <- "845185"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp084.1"] <- "845221"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp085.1"] <- "1466378"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp086.1"] <- "845183"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp087.1"] <- "1466379"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp088.1"] <- "845184"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp090.1"] <- "845188"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp091.1"] <- "845179"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp092.1"] <- "845187"
-##assign mitochondrial accessions
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp008.1"] <- "4055864"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp024.1"] <- "4055860"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp032.1"] <- "4055888"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp033.1"] <- "4055938"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp036.1"] <- "4055894"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp050.1"] <- "4055956"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp051.1"] <- "4055881"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp057.1"] <- "4055973"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp081.1"] <- "4055890"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp092.1"] <- "4055837"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp097.1"] <- "4055857"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp098.1"] <- "4055896"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp113.1"] <- "4055802"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp119.1"] <- "4055928"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp129.1"] <- "4055878"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp136.1"] <- "4056004"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp159.1"] <- "4055794"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp167.1"] <- "4056007"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp179.1"] <- "4056006"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp185.1"] <- "4055892"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp157.1"] <- "4056008"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp107.1"] <- "4056003"
-##add organelle entrez to mgdb-assigned Entrez numbers 
-Entrez <- mgdb[,c(1,12)]
-colnames(Entrez) <- c("Gene", "Entrez")
-Entrez <- Entrez[!Entrez$Entrez=="",]
-Entrez <- rbind(Entrez, organelleEntrez)
-Entrez <- unique(Entrez)
-saveRDS(Entrez, "Entrez")
+Entrez <- readRDS("Entrez")
 #add Entrez to data
 tmt <- join(x = tmt, y = Entrez, by = "Gene", type="left", match="first")
 ```
@@ -504,105 +415,15 @@ ggsave("LeafSections_Cyto_B73_Mo17.jpg", width = 5, height = 6)
 
 
 ```{r import protein data}
-tmt2 <- read.csv("acs-B-M-H leaf section 091322 protein groups-raw.csv", stringsAsFactors = F)
+tmt2 <- read.csv("acs-B-M-H leaf section 091322 protein groups-normalized.csv", stringsAsFactors = F)
+tmt2$Gene <- substr(tmt2$Accession, start = 1, stop = 14)
+#reorder columns
+tmt2 <- tmt2[,c(25,17:23,1:12,14:16)]
+```
+
+```{r remove unwanted data}
 n <- nrow(tmt2)
 print(c("total proteins =", n), quote = F)
-#Make gene column
-tmt2$Gene <- substr(tmt2$Accession, start = 1, stop = 14)
-#Assign Entrez numbers
-##manually assign organelle-encoded accessions
-organelleEntrez <- tmt2[grep("Zema|Zeam", tmt2$Gene),]
-organelleEntrez <- data.frame("Gene"=organelleEntrez$Gene, "Entrez"=NA)
-##assign chloroplast accessions
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp003.1"] <- "845178"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp004.1"] <- "845232"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp008.1"] <- "845201"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp013.1"] <- "845225"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp014.1"] <- "845226"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp016.1"] <- "845236"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp017.1"] <- "845174"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp018.1"] <- "845173"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp019.1"] <- "845172"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp019.1"] <- "845172"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp021.1"] <- "845229"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp022.1"] <- "845196"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp023.1"] <- "845195"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp024.1"] <- "1466361"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp026.1"] <- "845238"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp027.1"] <- "845189"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp028.1"] <- "845190"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp029.1"] <- "845182"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp030.1"] <- "845171"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp032.1"] <- "845212"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp035.1"] <- "845175"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp036.1"] <- "845191"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp039.1"] <- "845204"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp040.1"] <- "845203"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp043.1"] <- "845198"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp044.1"] <- "845222"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp045.1"] <- "845233"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp046.1"] <- "845217"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp047.1"] <- "845176"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp048.1"] <- "845200"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp050.1"] <- "845211"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp051.1"] <- "845205"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp052.1"] <- "845192"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp053.1"] <- "845193"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp054.1"] <- "845224"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp055.1"] <- "845228"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp056.1"] <- "845223"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp057.1"] <- "845177"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp058.1"] <- "845241"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp059.1"] <- "845213"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp060.1"] <- "845214"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp061.1"] <- "845237"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp062.1"] <- "845218"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp063.1"] <- "845235"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp065.1"] <- "845216"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp067.1"] <- "845220"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp075.1"] <- "845181"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp082.1"] <- "845230"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp083.1"] <- "845185"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp084.1"] <- "845221"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp085.1"] <- "1466378"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp086.1"] <- "845183"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp087.1"] <- "1466379"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp088.1"] <- "845184"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp090.1"] <- "845188"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp091.1"] <- "845179"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZemaCp092.1"] <- "845187"
-##assign mitochondrial accessions
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp008.1"] <- "4055864"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp024.1"] <- "4055860"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp032.1"] <- "4055888"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp033.1"] <- "4055938"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp036.1"] <- "4055894"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp050.1"] <- "4055956"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp051.1"] <- "4055881"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp057.1"] <- "4055973"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp081.1"] <- "4055890"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp092.1"] <- "4055837"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp097.1"] <- "4055857"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp098.1"] <- "4055896"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp113.1"] <- "4055802"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp119.1"] <- "4055928"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp129.1"] <- "4055878"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp136.1"] <- "4056004"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp159.1"] <- "4055794"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp167.1"] <- "4056007"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp179.1"] <- "4056006"
-organelleEntrez$Entrez[organelleEntrez$Gene=="ZeamMp185.1"] <- "4055892"
-##add organelle entrez to mgdb-assigned Entrez numbers 
-Entrez <- mgdb[,c(1,12)]
-colnames(Entrez) <- c("Gene", "Entrez")
-Entrez <- Entrez[!Entrez$Entrez=="",]
-Entrez <- rbind(Entrez, organelleEntrez)
-Entrez <- unique(Entrez)
-saveRDS(Entrez, "Entrez")
-#add Entrez to data
-tmt2 <- join(x = tmt2, y = Entrez, by = "Gene", type="left", match="first")
-#reorder columns
-tmt2 <- tmt2[,c(1,23,26,24,18:22,2:13,15:17)]
 #remove non-maize proteins
 tmt2 <- tmt2[(grep("Zm|Zema|Zeam", tmt2$Accession)),]
 n2 <- nrow(tmt2)
@@ -612,25 +433,25 @@ tmt2.pm <- tmt2[grep("only", tmt2$Accession),]
 tmt2 <- tmt2[-grep("only", tmt2$Accession),]
 n3 <- nrow(tmt2)
 print(c("polymorphic proteins removed =", (n2-n3)), quote = F)
-#remove rows with missing tmt data
-tmt2 <- tmt2[!tmt2[,10]==0,]
-tmt2 <- tmt2[!tmt2[,11]==0,]
-tmt2 <- tmt2[!tmt2[,12]==0,]
-tmt2 <- tmt2[!tmt2[,13]==0,]
-tmt2 <- tmt2[!tmt2[,14]==0,]
-tmt2 <- tmt2[!tmt2[,15]==0,]
-tmt2 <- tmt2[!tmt2[,16]==0,]
-tmt2 <- tmt2[!tmt2[,17]==0,]
-tmt2 <- tmt2[!tmt2[,18]==0,]
-tmt2 <- tmt2[!tmt2[,19]==0,]
-tmt2 <- tmt2[!tmt2[,20]==0,]
-tmt2 <- tmt2[!tmt2[,21]==0,]
-tmt2 <- tmt2[!tmt2[,22]==0,]
-tmt2 <- tmt2[!tmt2[,23]==0,]
-tmt2 <- tmt2[!tmt2[,24]==0,]
+#remove rows with missing tmt2 data
+for(i in 9:23){
+tmt2 <- tmt2[!tmt2[,i]==0,]
+}
 n4 <- nrow(tmt2)
 print(c("proteins with missing data removed =", (n3-n4)), quote = F)
 print(c("remaining proteins =", n4), quote = F)
+```
+
+```{r}
+#add Entrez to data
+tmt2 <- join(x = tmt2, y = Entrez, by = "Gene", type="left", match="first")
+```
+```{r}
+#check that none were missed
+tmt2[grep("Zema|Zeam", tmt2$Gene),c("Gene","Entrez")]
+```
+```{r}
+Entrez[grep("ZemaCp",Entrez$Gene),]
 ```
 
 
