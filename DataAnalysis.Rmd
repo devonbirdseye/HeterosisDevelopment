@@ -57,8 +57,7 @@ print(c("remaining proteins =", n4), quote = F)
 Entrez <- readRDS("Entrez")
 #add Entrez to data
 tmt <- join(x = tmt, y = Entrez, by = "Gene", type="left", match="first")
-```
-```{r}
+
 #check that none were missed
 tmt[grep("Zema|Zeam", tmt$Gene),c("Gene","Entrez")]
 ```
@@ -120,6 +119,17 @@ tmt$l2.BM.3.MP.3 <- log2(tmt$BM.3/tmt$MP.3)
 tmt$l2.BM.4.MP.4 <- log2(tmt$BM.4/tmt$MP.4)
 tmt$l2.BM.5.MP.5 <- log2(tmt$BM.5/tmt$MP.5)
 ```
+```{r}
+tmt.pRibo.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),c(3:6,8:11,13:16)])
+rownames(tmt.pRibo.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
+heatmap(tmt.pRibo.m, Colv = NA)
+```
+```{r}
+tmt.PhAGs.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),c(3:6,8:11,13:16)])
+rownames(tmt.PhAGs.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
+heatmap(tmt.PhAGs.m, Colv = NA)
+```
+
 ##calculate B73/Mo17 ratios
 ```{r}
 tmt$l2.B73.1.Mo17.1 <- log2(tmt$B73.1/tmt$Mo17.1)
@@ -536,6 +546,7 @@ ggsave("tmt2.acs.B73.png", width = 4, height = 5)
 ```
 
 #Experiment 4
+##Import
 ```{r import data}
 tmt4 <- read.csv("B-M-H-A leaf section 050123.csv", stringsAsFactors = F)
 
@@ -573,6 +584,7 @@ print(c("remaining proteins =", n4), quote = F)
 
 ##Add Entrez numbers
 ```{r}
+Entrez <- readRDS("Entrez")
 #add Entrez to data
 tmt4 <- join(x = tmt4, y = Entrez, by = "Gene", type="left", match="first")
 ```
@@ -596,7 +608,13 @@ tmt4$l2.A1.B1 <- log2(tmt4$A.1/tmt4$B.1)
 tmt4$l2.A2.B2 <- log2(tmt4$A.2/tmt4$B.2)
 tmt4$l2.A3.B3 <- log2(tmt4$A.3/tmt4$B.3)
 tmt4$l2.A4.B4 <- log2(tmt4$A.4/tmt4$B.4)
+
+tmt4$l2.B1.M1 <- log2(tmt4$B.1/tmt4$M.1)
+tmt4$l2.B2.M2 <- log2(tmt4$B.2/tmt4$M.2)
+tmt4$l2.B3.M3 <- log2(tmt4$B.3/tmt4$M.3)
+tmt4$l2.B4.M4 <- log2(tmt4$B.4/tmt4$M.4)
 ```
+
 ```{r BM/MP density}
 tmt4.BM.MP <- tmt4[,c("Accession","Gene","l2.H1.MP1", "l2.H2.MP2", "l2.H3.MP3","l2.H4.MP4")]
 colnames(tmt4.BM.MP) <- c("Accession","Gene","Section1", "Section2","Section3","Section4")
@@ -657,6 +675,55 @@ ggplot(tmt4.acs.B73.m, mapping=aes(y=variable, x=value, color=Category))+
   guides(col=guide_legend(nrow = 2))+
   coord_cartesian(clip = "off", expand = F)
 ggsave("tmt4.acs.B73.png", width = 4, height = 5)
+```
+```{r B73/Mo17 density}
+tmt4.B73.Mo17 <- tmt4[,c("Accession","Gene","l2.B1.M1", "l2.B2.M2", "l2.B3.M3","l2.B4.M4")]
+colnames(tmt4.B73.Mo17) <- c("Accession","Gene","Section1", "Section2","Section3","Section4")
+tmt4.B73.Mo17.m <- melt(tmt4.B73.Mo17)
+
+tmt4.B73.Mo17.m$Category <- "Other"
+
+tmt4.B73.Mo17.m$Category[tmt4.B73.Mo17.m$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)] <- "PhANGs/PhAPGs"
+
+tmt4.B73.Mo17.m$Category[tmt4.B73.Mo17.m$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo)] <- "Plastid ribosome"
+
+tmt4.B73.Mo17.m$Category[tmt4.B73.Mo17.m$Gene %in% GOIs$CytoRibo] <- "Cytosolic ribosome"
+
+
+colors.p2 <- c("Other"="grey50",  "Plastid ribosome"="#6A00EA",  "PhANGs/PhAPGs"="#008275", "Cytosolic ribosome"="#B50000")
+
+tmt4.B73.Mo17.m$value[tmt4.B73.Mo17.m$value <= -2] <- -2
+tmt4.B73.Mo17.m$value[tmt4.B73.Mo17.m$value >= 2] <- 2
+
+ggplot(tmt4.B73.Mo17.m, mapping=aes(y=variable, x=value, color=Category))+
+  geom_density_ridges(fill=NA, size=1, scale=1) +
+  scale_color_manual(values = colors.p2, name="")+
+  theme_ridges() +
+  xlim(-2,2)+
+  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
+  geom_vline(xintercept = 0,  color="black", size=1)+
+  xlab("log2(B73/M017)")+
+  guides(col=guide_legend(nrow = 2))+
+  coord_cartesian(clip = "off", expand = F)
+ggsave("tmt4.B73.Mo17.png", width = 4, height = 5)
+```
+
+```{r}
+tmt4.m <- as.matrix(tmt4[,9:24])
+rownames(tmt4.m) <- tmt4$Gene
+heatmap(tmt4.m, Colv = NA)
+```
+
+
+```{r}
+tmt4.pRibo.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),9:24])
+rownames(tmt4.pRibo.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
+heatmap(tmt4.pRibo.m, Colv = NA)
+```
+```{r}
+tmt4.PhAGs.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),9:24])
+rownames(tmt4.PhAGs.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
+heatmap(tmt4.PhAGs.m, Colv = NA)
 ```
 
 
