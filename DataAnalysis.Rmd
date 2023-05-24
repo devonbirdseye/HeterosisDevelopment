@@ -125,7 +125,19 @@ rownames(tmt.pRibo.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
 heatmap(tmt.pRibo.m, Colv = NA)
 ```
 ```{r}
+tmt.pRibo.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),c("B73.2","Mo17.2","BM.2","B73.3","Mo17.3","BM.3","B73.4","Mo17.4","BM.4","B73.5","Mo17.5","BM.5")])
+rownames(tmt.pRibo.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
+heatmap(tmt.pRibo.m, Colv = NA)
+```
+
+
+```{r}
 tmt.PhAGs.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),c(3:6,8:11,13:16)])
+rownames(tmt.PhAGs.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
+heatmap(tmt.PhAGs.m, Colv = NA)
+```
+```{r}
+tmt.PhAGs.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),c("B73.2","Mo17.2","BM.2","B73.3","Mo17.3","BM.3","B73.4","Mo17.4","BM.4","B73.5","Mo17.5","BM.5")])
 rownames(tmt.PhAGs.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
 heatmap(tmt.PhAGs.m, Colv = NA)
 ```
@@ -583,16 +595,15 @@ print(c("remaining proteins =", n4), quote = F)
 
 
 ##Add Entrez numbers
-```{r}
+```{r add Entrez}
 Entrez <- readRDS("Entrez")
 #add Entrez to data
 tmt4 <- join(x = tmt4, y = Entrez, by = "Gene", type="left", match="first")
-```
-```{r}
+
 #check that none were missed
 tmt4[grep("Zema|Zeam", tmt4$Gene),c("Gene","Entrez")]
 ```
-
+##Calculate ratios
 ```{r calculate ratios}
 tmt4$MP.1 <- rowMeans(tmt4[,c("B.1","M.1")])
 tmt4$MP.2 <- rowMeans(tmt4[,c("B.2","M.2")])
@@ -614,7 +625,7 @@ tmt4$l2.B2.M2 <- log2(tmt4$B.2/tmt4$M.2)
 tmt4$l2.B3.M3 <- log2(tmt4$B.3/tmt4$M.3)
 tmt4$l2.B4.M4 <- log2(tmt4$B.4/tmt4$M.4)
 ```
-
+##Density plots
 ```{r BM/MP density}
 tmt4.BM.MP <- tmt4[,c("Accession","Gene","l2.H1.MP1", "l2.H2.MP2", "l2.H3.MP3","l2.H4.MP4")]
 colnames(tmt4.BM.MP) <- c("Accession","Gene","Section1", "Section2","Section3","Section4")
@@ -707,23 +718,31 @@ ggplot(tmt4.B73.Mo17.m, mapping=aes(y=variable, x=value, color=Category))+
   coord_cartesian(clip = "off", expand = F)
 ggsave("tmt4.B73.Mo17.png", width = 4, height = 5)
 ```
-
-```{r}
+##Heatmaps
+```{r all genes heatmap}
+#sort columns by clustering
 tmt4.m <- as.matrix(tmt4[,9:24])
 rownames(tmt4.m) <- tmt4$Gene
-heatmap(tmt4.m, Colv = NA)
+heatmap(tmt4.m)
 ```
-
-
-```{r}
+```{r plastid ribosome heat map}
+#sort columns by genotype
 tmt4.pRibo.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),9:24])
 rownames(tmt4.pRibo.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
 heatmap(tmt4.pRibo.m, Colv = NA)
+#sort columns by section
+tmt4.pRibo.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),c("B.1","M.1","H.1","A.1","B.2","M.2","H.2","A.2","B.3","M.3","H.3","A.3","B.4","M.4","H.4","A.4")])
+rownames(tmt4.pRibo.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
+heatmap(tmt4.pRibo.m, Colv = NA)
 ```
-```{r}
+```{r photosynthesis associated heatmap}
+#sort columns by genotype
 tmt4.PhAGs.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),9:24])
 rownames(tmt4.PhAGs.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
 heatmap(tmt4.PhAGs.m, Colv = NA)
+#sort columns by section
+tmt4.PhAGs.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),c("B.1","M.1","H.1","A.1","B.2","M.2","H.2","A.2","B.3","M.3","H.3","A.3","B.4","M.4","H.4","A.4")])
+rownames(tmt4.PhAGs.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
+heatmap(tmt4.PhAGs.m, Colv = NA)
 ```
-
 
