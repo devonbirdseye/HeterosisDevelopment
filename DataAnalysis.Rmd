@@ -23,7 +23,6 @@ mgdb <- mgdb[-c(1:5),]
 ```
 ```{r Genes Of Interest}
 GOIs <- readRDS("GOIs")
-GOIs$PhANGs <- c(GOIs$PhANGs, "Zm00001d000279")
 ```
 #Experiment 1
 ##import data
@@ -52,7 +51,6 @@ n4 <- nrow(tmt)
 print(c("proteins with missing data removed =", (n3-n4)), quote = F)
 print(c("remaining proteins =", n4), quote = F)
 ```
-
 ```{r add Entrez numbers}
 Entrez <- readRDS("Entrez")
 #add Entrez to data
@@ -61,7 +59,7 @@ tmt <- join(x = tmt, y = Entrez, by = "Gene", type="left", match="first")
 #check that none were missed
 tmt[grep("Zema|Zeam", tmt$Gene),c("Gene","Entrez")]
 ```
-##calculate hyb/MP ratios
+##calculate ratios
 ```{r}
 tmt$MP.1 <- rowMeans(tmt[,c("B73.1", "Mo17.1")])
 tmt$MP.2 <- rowMeans(tmt[,c("B73.2", "Mo17.2")])
@@ -74,42 +72,35 @@ tmt$l2.BM.2.MP.2 <- log2(tmt$BM.2/tmt$MP.2)
 tmt$l2.BM.3.MP.3 <- log2(tmt$BM.3/tmt$MP.3)
 tmt$l2.BM.4.MP.4 <- log2(tmt$BM.4/tmt$MP.4)
 tmt$l2.BM.5.MP.5 <- log2(tmt$BM.5/tmt$MP.5)
-```
-```{r}
-tmt.pRibo.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),c(3:6,8:11,13:16)])
-rownames(tmt.pRibo.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
-heatmap(tmt.pRibo.m, Colv = NA)
-```
-```{r}
-tmt.pRibo.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),c("B73.2","Mo17.2","BM.2","B73.3","Mo17.3","BM.3","B73.4","Mo17.4","BM.4","B73.5","Mo17.5","BM.5")])
-rownames(tmt.pRibo.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
-heatmap(tmt.pRibo.m, Colv = NA)
-```
 
-
-```{r}
-tmt.PhAGs.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),c(3:6,8:11,13:16)])
-rownames(tmt.PhAGs.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
-heatmap(tmt.PhAGs.m, Colv = NA)
-```
-```{r}
-tmt.PhAGs.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),c("B73.2","Mo17.2","BM.2","B73.3","Mo17.3","BM.3","B73.4","Mo17.4","BM.4","B73.5","Mo17.5","BM.5")])
-rownames(tmt.PhAGs.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
-heatmap(tmt.PhAGs.m, Colv = NA)
-```
-
-##calculate B73/Mo17 ratios
-```{r}
 tmt$l2.B73.1.Mo17.1 <- log2(tmt$B73.1/tmt$Mo17.1)
 tmt$l2.B73.2.Mo17.2 <- log2(tmt$B73.2/tmt$Mo17.2)
 tmt$l2.B73.3.Mo17.3 <- log2(tmt$B73.3/tmt$Mo17.3)
 tmt$l2.B73.4.Mo17.4 <- log2(tmt$B73.4/tmt$Mo17.4)
 tmt$l2.B73.5.Mo17.5 <- log2(tmt$B73.5/tmt$Mo17.5)
 ```
-
-```{r save table of entrez numbers for all detected genes}
-write.csv(na.omit(tmt[!tmt$Entrez=="",c("Gene","Accession","Entrez")]), row.names = F, "tmt.EnrichmentBackground.csv")
+##heatmaps
+```{r plastid ribosome heat map}
+#sort columns by genotype
+tmt.pRibo.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),c(3:6,8:11,13:16)])
+rownames(tmt.pRibo.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
+heatmap(tmt.pRibo.m, Colv = NA)
+#sort columns by section
+tmt.pRibo.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),c("B73.2","Mo17.2","BM.2","B73.3","Mo17.3","BM.3","B73.4","Mo17.4","BM.4","B73.5","Mo17.5","BM.5")])
+rownames(tmt.pRibo.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
+heatmap(tmt.pRibo.m, Colv = NA)
 ```
+```{r photosynthesis-associated heatmap}
+#sort columns by genotype
+tmt.PhAGs.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),c(3:6,8:11,13:16)])
+rownames(tmt.PhAGs.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
+heatmap(tmt.PhAGs.m, Colv = NA)
+#sort columns by section
+tmt.PhAGs.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),c("B73.2","Mo17.2","BM.2","B73.3","Mo17.3","BM.3","B73.4","Mo17.4","BM.4","B73.5","Mo17.5","BM.5")])
+rownames(tmt.PhAGs.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
+heatmap(tmt.PhAGs.m, Colv = NA)
+```
+
 ##PCA
 
 ```{r}
@@ -132,7 +123,6 @@ ggbiplot(tmt.pca, var.axes = F, labels = colnames(tmt[,2:16]), groups = tmt.gt)+
   theme(legend.position = "none")
 #ggsave("LeafSectionsPCA.png", width = 4, height = 4)
 ```
-
 ```{r}
 tmt.pca.var <- get_pca_var(tmt.pca)
 tmt.pca.var.contrib <- as.data.frame(tmt.pca.var$contrib)
@@ -156,9 +146,6 @@ tmt.pca.var.contrib.Dim2 <- merge.data.frame(tmt.pca.var.contrib[,c("Accession",
 tmt.pca.var.contrib.Dim2 <- tmt.pca.var.contrib.Dim2[order(-tmt.pca.var.contrib.Dim2$Dim.2),]
 write.csv(tmt.pca.var.contrib.Dim2, row.names = F, "tmt.pca.var.contrib.Dim2.csv")
 ```
-
-
-
 ```{r}
 tmt.pca.var.contrib$Category <- factor(tmt.pca.var.contrib$Category, levels = c("Other", "Plastid-localized", "Ethylene biosynthesis","PE plastid ribosome", "NE plastid ribosome", "PhAPGs","PhANGs"))
 ggplot(tmt.pca.var.contrib, mapping=aes(y=Category, x=Dim.1, fill = stat(x)))+
@@ -388,131 +375,6 @@ ggplot(tmt.B73.Mo17.m[tmt.B73.Mo17.m$Category %in% c("Other","Cytosolic ribosome
 ggsave("LeafSections_Cyto_B73_Mo17.jpg", width = 5, height = 6)
 ```
 
-#Experiment 2
-##import data
-
-
-```{r import protein data}
-tmt2 <- read.csv("acs-B-M-H leaf section 091322 protein groups-normalized.csv", stringsAsFactors = F)
-tmt2$Gene <- substr(tmt2$Accession, start = 1, stop = 14)
-#reorder columns
-tmt2 <- tmt2[,c(25,17:23,1:12,14:16)]
-```
-
-```{r remove unwanted data}
-n <- nrow(tmt2)
-print(c("total proteins =", n), quote = F)
-#remove non-maize proteins
-tmt2 <- tmt2[(grep("Zm|Zema|Zeam", tmt2$Accession)),]
-n2 <- nrow(tmt2)
-print(c("non-maize proteins removed =", (n-n2)), quote = F)
-#remove polymorphic proteins
-tmt2.pm <- tmt2[grep("only", tmt2$Accession),]
-tmt2 <- tmt2[-grep("only", tmt2$Accession),]
-n3 <- nrow(tmt2)
-print(c("polymorphic proteins removed =", (n2-n3)), quote = F)
-#remove rows with missing tmt2 data
-for(i in 9:23){
-tmt2 <- tmt2[!tmt2[,i]==0,]
-}
-n4 <- nrow(tmt2)
-print(c("proteins with missing data removed =", (n3-n4)), quote = F)
-print(c("remaining proteins =", n4), quote = F)
-```
-##Add Entrez numbers
-```{r}
-#add Entrez to data
-tmt2 <- join(x = tmt2, y = Entrez, by = "Gene", type="left", match="first")
-```
-```{r}
-#check that none were missed
-tmt2[grep("Zema|Zeam", tmt2$Gene),c("Gene","Entrez")]
-```
-##calculate ratios
-```{r}
-tmt2$MP.2 <- rowMeans(tmt2[,c("B73.s2", "Mo17.s2")])
-tmt2$MP.3 <- rowMeans(tmt2[,c("B73.s3", "Mo17.s3")])
-tmt2$MP.4 <- rowMeans(tmt2[,c("B73.s4", "Mo17.s4")])
-
-tmt2$l2.BM.2.MP.2 <- log2(tmt2$BM.s2/tmt2$MP.2)
-tmt2$l2.BM.3.MP.3 <- log2(tmt2$BM.s3/tmt2$MP.3)
-tmt2$l2.BM.4.MP.4 <- log2(tmt2$BM.s4/tmt2$MP.4)
-```
-```{r}
-tmt2$l2.B73.2.Mo17.2 <- log2(tmt2$B73.s2/tmt2$Mo17.s2)
-tmt2$l2.B73.3.Mo17.3 <- log2(tmt2$B73.s3/tmt2$Mo17.s3)
-tmt2$l2.B73.4.Mo17.4 <- log2(tmt2$B73.s4/tmt2$Mo17.s4)
-```
-```{r}
-tmt2$l2.acs.1.B73.1 <- log2(tmt2$acs.s1/tmt2$B73.s1)
-tmt2$l2.acs.2.B73.2 <- log2(tmt2$acs.s2/tmt2$B73.s2)
-tmt2$l2.acs.3.B73.3 <- log2(tmt2$acs.s3/tmt2$B73.s3)
-tmt2$l2.acs.4.B73.4 <- log2(tmt2$acs.s4/tmt2$B73.s4)
-```
-##Density curves
-```{r}
-tmt2.BM.MP <- tmt2[,c("Gene","l2.BM.2.MP.2","l2.BM.3.MP.3","l2.BM.4.MP.4")]
-colnames(tmt2.BM.MP) <- c("Gene", "Section2","Section3","Section4")
-tmt2.BM.MP.m <- melt(tmt2.BM.MP)
-
-tmt2.BM.MP.m$Category <- "Other"
-
-tmt2.BM.MP.m$Category[tmt2.BM.MP.m$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)] <- "PhANGs/PhAPGs"
-
-tmt2.BM.MP.m$Category[tmt2.BM.MP.m$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo)] <- "Plastid ribosome"
-
-
-tmt2.BM.MP.m$Category[tmt2.BM.MP.m$Gene %in% GOIs$CytoRibo] <- "Cytosolic ribosome"
-
-
-colors.p2 <- c("Other"="grey50",  "Plastid ribosome"="#6A00EA",  "PhANGs/PhAPGs"="#008275", "Cytosolic ribosome"="#B50000")
-
-tmt2.BM.MP.m$value[tmt2.BM.MP.m$value <= -2] <- -2
-tmt2.BM.MP.m$value[tmt2.BM.MP.m$value >= 2] <- 2
-
-ggplot(tmt2.BM.MP.m, mapping=aes(y=variable, x=value, color=Category))+
-  geom_density_ridges(fill=NA, size=1, scale=1) +
-  scale_color_manual(values = colors.p2, name="")+
-  theme_ridges() +
-  xlim(-2,2)+
-  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
-  geom_vline(xintercept = 0,  color="black", size=1)+
-  xlab("log2(BM/MP)")+
-  guides(col=guide_legend(nrow = 2))+
-  coord_cartesian(clip = "off", expand = F)
-ggsave("tmt2.BM.MP.png", width = 4, height = 4)
-```
-```{r acs/B73 density}
-tmt2.acs.B73 <- tmt2[,c("Accession","Gene","l2.acs.1.B73.1", "l2.acs.2.B73.2","l2.acs.3.B73.3","l2.acs.4.B73.4")]
-colnames(tmt2.acs.B73) <- c("Accession","Gene","Section1", "Section2","Section3","Section4")
-tmt2.acs.B73.m <- melt(tmt2.acs.B73)
-
-tmt2.acs.B73.m$Category <- "Other"
-
-tmt2.acs.B73.m$Category[tmt2.acs.B73.m$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)] <- "PhANGs/PhAPGs"
-
-tmt2.acs.B73.m$Category[tmt2.acs.B73.m$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo)] <- "Plastid ribosome"
-
-tmt2.acs.B73.m$Category[tmt2.acs.B73.m$Gene %in% GOIs$CytoRibo] <- "Cytosolic ribosome"
-
-colors.p2 <- c("Other"="grey50",  "Plastid ribosome"="#6A00EA",  "PhANGs/PhAPGs"="#008275", "Cytosolic ribosome"="#B50000")
-
-tmt2.acs.B73.m$value[tmt2.acs.B73.m$value <= -2] <- -2
-tmt2.acs.B73.m$value[tmt2.acs.B73.m$value >= 2] <- 2
-
-ggplot(tmt2.acs.B73.m, mapping=aes(y=variable, x=value, color=Category))+
-  geom_density_ridges(fill=NA, size=1, scale=1) +
-  scale_color_manual(values = colors.p2, name="")+
-  theme_ridges() +
-  xlim(-2,2)+
-  theme(legend.position = "bottom", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=12), legend.text = element_text(size=9),)+
-  geom_vline(xintercept = 0,  color="black", size=1)+
-  xlab("log2(acs/B73)")+
-  guides(col=guide_legend(nrow = 2))+
-  coord_cartesian(clip = "off", expand = F)
-ggsave("tmt2.acs.B73.png", width = 4, height = 5)
-```
-
 #Experiment 4
 ##Import
 ```{r import data}
@@ -691,7 +553,7 @@ tmt4.pRibo.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),c(
 rownames(tmt4.pRibo.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
 heatmap(tmt4.pRibo.m, Colv = NA)
 ```
-```{r photosynthesis associated heatmap}
+```{r photosynthesis-associated heatmap}
 #sort columns by genotype
 tmt4.PhAGs.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),9:24])
 rownames(tmt4.PhAGs.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
