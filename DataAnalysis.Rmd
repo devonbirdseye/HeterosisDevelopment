@@ -101,70 +101,9 @@ rownames(tmt.PhAGs.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
 heatmap(tmt.PhAGs.m, Colv = NA)
 ```
 
-##PCA
 
-```{r}
-colnames(tmt)
-tmt.pca <- t(tmt[,2:16])
-colnames(tmt.pca) <- tmt$Accession
-tmt.pca <- scale(tmt.pca, scale = T, center = F)
-tmt.pca <- prcomp(tmt.pca)
-```
-```{r}
-fviz_eig(tmt.pca, addlabels = TRUE)
-#ggsave("LeafSectionsScree.png", width = 7, height = 5)
-```
-```{r}
-tmt.gt <- c(rep("B73",5), rep("Mo17",5), rep("BxM",5))
-```
-```{r}
-ggbiplot(tmt.pca, var.axes = F, labels = colnames(tmt[,2:16]), groups = tmt.gt)+
-  theme_bw()+
-  theme(legend.position = "none")
-#ggsave("LeafSectionsPCA.png", width = 4, height = 4)
-```
-```{r}
-tmt.pca.var <- get_pca_var(tmt.pca)
-tmt.pca.var.contrib <- as.data.frame(tmt.pca.var$contrib)
-
-
-tmt.pca.var.contrib$Accession <- rownames(tmt.pca.var.contrib)
-tmt.pca.var.contrib$Gene <- substr(tmt.pca.var.contrib$Accession, start = 1, stop = 14)
-tmt.pca.var.contrib$Category <- "Other"
-tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$plastid] <- "Plastid-localized"
-tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$PhANGs] <- "PhANGs"
-tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$PhAPGs] <- "PhAPGs"
-tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$NE.PtRibo] <- "NE plastid ribosome"
-tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$PE.ribo] <- "PE plastid ribosome"
-tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$EtBio] <- "Ethylene biosynthesis"
-
-tmt.pca.var.contrib.Dim1 <- merge.data.frame(tmt.pca.var.contrib[,c("Accession", "Category", "Dim.1")], tmt[,c("Accession", "Gene", "Entrez", "Protein")], by.x = "Accession", by.y = "Accession", all.x = T, all.y = F)
-tmt.pca.var.contrib.Dim1 <- tmt.pca.var.contrib.Dim1[order(-tmt.pca.var.contrib.Dim1$Dim.1),]
-write.csv(tmt.pca.var.contrib.Dim1, row.names = F, "tmt.pca.var.contrib.Dim1.csv")
-
-tmt.pca.var.contrib.Dim2 <- merge.data.frame(tmt.pca.var.contrib[,c("Accession", "Category", "Dim.2")], tmt[,c("Accession", "Gene", "Entrez", "Protein")], by.x = "Accession", by.y = "Accession", all.x = T, all.y = F)
-tmt.pca.var.contrib.Dim2 <- tmt.pca.var.contrib.Dim2[order(-tmt.pca.var.contrib.Dim2$Dim.2),]
-write.csv(tmt.pca.var.contrib.Dim2, row.names = F, "tmt.pca.var.contrib.Dim2.csv")
-```
-```{r}
-tmt.pca.var.contrib$Category <- factor(tmt.pca.var.contrib$Category, levels = c("Other", "Plastid-localized", "Ethylene biosynthesis","PE plastid ribosome", "NE plastid ribosome", "PhAPGs","PhANGs"))
-ggplot(tmt.pca.var.contrib, mapping=aes(y=Category, x=Dim.1, fill = stat(x)))+
-  geom_density_ridges_gradient(size=1) +
-  scale_fill_viridis_c(option = "C")+
-  theme_ridges() +
-  theme(axis.text =element_text(size=8), axis.title = element_text(size=8), legend.position = "none", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=8))+
-  xlim(0,max(tmt.pca.var.contrib$Dim.1))+
-  coord_cartesian(expand = F)
-```
-```{r}
-ggplot(tmt.pca.var.contrib, mapping=aes(y=Category, x=Dim.2, fill = stat(x)))+
-  geom_density_ridges_gradient(alpha=0.7) +
-  scale_fill_viridis_c(option = "B")+
-  theme_ridges() +
-  theme(axis.text =element_text(size=8), axis.title = element_text(size=8), legend.position = "none", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=8))
-```
 ##Expression Heterosis Density Curves
-```{r}
+```{r tmt.BM.MP sections 1-5}
 tmt.BM.MP <- tmt[,c("Gene","l2.BM.1.MP.1", "l2.BM.2.MP.2","l2.BM.3.MP.3","l2.BM.4.MP.4","l2.BM.5.MP.5")]
 colnames(tmt.BM.MP) <- c("Gene","Section1", "Section2","Section3","Section4","Section5")
 tmt.BM.MP.m <- melt(tmt.BM.MP)
@@ -196,8 +135,7 @@ ggplot(tmt.BM.MP.m, mapping=aes(y=variable, x=value, color=Category))+
   coord_cartesian(clip = "off", expand = F)
 ggsave("tmt.BM.MP.png", width = 4, height = 5)
 ```
-
-```{r}
+```{r tmt.BM.MP sections 2-5}
 tmt.BM.MP <- tmt[,c("Gene","l2.BM.2.MP.2","l2.BM.3.MP.3","l2.BM.4.MP.4","l2.BM.5.MP.5")]
 colnames(tmt.BM.MP) <- c("Gene","Section1", "Section2","Section3","Section4")
 tmt.BM.MP.m <- melt(tmt.BM.MP)
@@ -229,8 +167,7 @@ ggplot(tmt.BM.MP.m, mapping=aes(y=variable, x=value, color=Category))+
   coord_cartesian(clip = "off", expand = F)
 ggsave("tmt.BM.MP.4sectionsOnly.png", width = 4, height = 5)
 ```
-
-```{r}
+```{r tmt.BM.MP plastid digenomic complex proteins}
 tmt.BM.MP <- tmt[,c("Accession","Gene","l2.BM.1.MP.1", "l2.BM.2.MP.2","l2.BM.3.MP.3","l2.BM.4.MP.4","l2.BM.5.MP.5")]
 colnames(tmt.BM.MP) <- c("Accession","Gene","Section1","Section2","Section3","Section4","Section5")
 tmt.BM.MP.m <- melt(tmt.BM.MP)
@@ -278,7 +215,7 @@ ggplot(tmt.BM.MP.m[tmt.BM.MP.m$Category %in% c("Plastid-localized","NE plastid r
   xlim(-2,2)
 ggsave("LeafSections_pRibo_BM_MP.jpg", width = 5, height = 6)
 ```
-```{r}
+```{r tmt.BM.MP Et Bio and Cyto Ribo}
 tmt.BM.MP <- tmt[,c("Accession","Gene","l2.BM.1.MP.1", "l2.BM.2.MP.2","l2.BM.3.MP.3","l2.BM.4.MP.4","l2.BM.5.MP.5")]
 colnames(tmt.BM.MP) <- c("Accession","Gene","Section1","Section2","Section3","Section4","Section5")
 tmt.BM.MP.m <- melt(tmt.BM.MP)
@@ -310,7 +247,7 @@ ggsave("LeafSections_Cyto_BM_MP.jpg", width = 5, height = 6)
 ```
 
 ##Parent expression density curves
-```{r}
+```{r tmt.B73.Mo17}
 tmt.B73.Mo17 <- tmt[,c("Accession","Gene","l2.B73.1.Mo17.1", "l2.B73.2.Mo17.2","l2.B73.3.Mo17.3","l2.B73.4.Mo17.4","l2.B73.5.Mo17.5")]
 colnames(tmt.B73.Mo17) <- c("Accession","Gene","Section1","Section2","Section3","Section4","Section5")
 tmt.B73.Mo17.m <- melt(tmt.B73.Mo17)
@@ -375,6 +312,67 @@ ggplot(tmt.B73.Mo17.m[tmt.B73.Mo17.m$Category %in% c("Other","Cytosolic ribosome
 ggsave("LeafSections_Cyto_B73_Mo17.jpg", width = 5, height = 6)
 ```
 
+##PCA
+```{r}
+colnames(tmt)
+tmt.pca <- t(tmt[,2:16])
+colnames(tmt.pca) <- tmt$Accession
+tmt.pca <- scale(tmt.pca, scale = T, center = F)
+tmt.pca <- prcomp(tmt.pca)
+```
+```{r}
+fviz_eig(tmt.pca, addlabels = TRUE)
+#ggsave("LeafSectionsScree.png", width = 7, height = 5)
+```
+```{r}
+tmt.gt <- c(rep("B73",5), rep("Mo17",5), rep("BxM",5))
+```
+```{r}
+ggbiplot(tmt.pca, var.axes = F, labels = colnames(tmt[,2:16]), groups = tmt.gt)+
+  theme_bw()+
+  theme(legend.position = "none")
+#ggsave("LeafSectionsPCA.png", width = 4, height = 4)
+```
+```{r}
+tmt.pca.var <- get_pca_var(tmt.pca)
+tmt.pca.var.contrib <- as.data.frame(tmt.pca.var$contrib)
+
+
+tmt.pca.var.contrib$Accession <- rownames(tmt.pca.var.contrib)
+tmt.pca.var.contrib$Gene <- substr(tmt.pca.var.contrib$Accession, start = 1, stop = 14)
+tmt.pca.var.contrib$Category <- "Other"
+tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$plastid] <- "Plastid-localized"
+tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$PhANGs] <- "PhANGs"
+tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$PhAPGs] <- "PhAPGs"
+tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$NE.PtRibo] <- "NE plastid ribosome"
+tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$PE.ribo] <- "PE plastid ribosome"
+tmt.pca.var.contrib$Category[tmt.pca.var.contrib$Gene %in% GOIs$EtBio] <- "Ethylene biosynthesis"
+
+tmt.pca.var.contrib.Dim1 <- merge.data.frame(tmt.pca.var.contrib[,c("Accession", "Category", "Dim.1")], tmt[,c("Accession", "Gene", "Entrez", "Protein")], by.x = "Accession", by.y = "Accession", all.x = T, all.y = F)
+tmt.pca.var.contrib.Dim1 <- tmt.pca.var.contrib.Dim1[order(-tmt.pca.var.contrib.Dim1$Dim.1),]
+write.csv(tmt.pca.var.contrib.Dim1, row.names = F, "tmt.pca.var.contrib.Dim1.csv")
+
+tmt.pca.var.contrib.Dim2 <- merge.data.frame(tmt.pca.var.contrib[,c("Accession", "Category", "Dim.2")], tmt[,c("Accession", "Gene", "Entrez", "Protein")], by.x = "Accession", by.y = "Accession", all.x = T, all.y = F)
+tmt.pca.var.contrib.Dim2 <- tmt.pca.var.contrib.Dim2[order(-tmt.pca.var.contrib.Dim2$Dim.2),]
+write.csv(tmt.pca.var.contrib.Dim2, row.names = F, "tmt.pca.var.contrib.Dim2.csv")
+```
+```{r}
+tmt.pca.var.contrib$Category <- factor(tmt.pca.var.contrib$Category, levels = c("Other", "Plastid-localized", "Ethylene biosynthesis","PE plastid ribosome", "NE plastid ribosome", "PhAPGs","PhANGs"))
+ggplot(tmt.pca.var.contrib, mapping=aes(y=Category, x=Dim.1, fill = stat(x)))+
+  geom_density_ridges_gradient(size=1) +
+  scale_fill_viridis_c(option = "C")+
+  theme_ridges() +
+  theme(axis.text =element_text(size=8), axis.title = element_text(size=8), legend.position = "none", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=8))+
+  xlim(0,max(tmt.pca.var.contrib$Dim.1))+
+  coord_cartesian(expand = F)
+```
+```{r}
+ggplot(tmt.pca.var.contrib, mapping=aes(y=Category, x=Dim.2, fill = stat(x)))+
+  geom_density_ridges_gradient(alpha=0.7) +
+  scale_fill_viridis_c(option = "B")+
+  theme_ridges() +
+  theme(axis.text =element_text(size=8), axis.title = element_text(size=8), legend.position = "none", axis.title.y = element_blank(), axis.title.x = element_text(hjust = 0.5, size=8))
+```
 #Experiment 4
 ##Import
 ```{r import data}
@@ -537,30 +535,44 @@ ggplot(tmt4.B73.Mo17.m, mapping=aes(y=variable, x=value, color=Category))+
 ggsave("tmt4.B73.Mo17.png", width = 4, height = 5)
 ```
 ##Heatmaps
-```{r all genes heatmap}
-#sort columns by clustering
+###All Genes
+```{r all genes heatmap by clustering}
 tmt4.m <- as.matrix(tmt4[,9:24])
 rownames(tmt4.m) <- tmt4$Gene
 heatmap(tmt4.m)
 ```
-```{r plastid ribosome heat map}
-#sort columns by genotype
+###pRibo
+```{r plastid ribosome heatmap by genotype}
 tmt4.pRibo.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),9:24])
 rownames(tmt4.pRibo.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
-heatmap(tmt4.pRibo.m, Colv = NA)
-#sort columns by section
+heatmap(tmt4.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4)
+```
+```{r plastid ribosome heatmap by section}
 tmt4.pRibo.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),c("B.1","M.1","H.1","A.1","B.2","M.2","H.2","A.2","B.3","M.3","H.3","A.3","B.4","M.4","H.4","A.4")])
 rownames(tmt4.pRibo.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
-heatmap(tmt4.pRibo.m, Colv = NA)
+heatmap(tmt4.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4)
 ```
-```{r photosynthesis-associated heatmap}
-#sort columns by genotype
+```{r plastid ribosome heatmap by ratios}
+tmt4.pRibo.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),30:37])
+rownames(tmt4.pRibo.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
+colnames(tmt4.pRibo.m) <- c("BM.1/MP.1", "BM.2/MP.2", "BM.3/MP.3", "BM.4/MP.4", "acs.1/B73.1", "acs.2/B73.2", "acs.3/B73.3", "acs.4/B73.4")
+heatmap(tmt4.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4)
+```
+###PhAGs
+```{r photosynthesis-associated heatmap by genotype}
 tmt4.PhAGs.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),9:24])
 rownames(tmt4.PhAGs.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
-heatmap(tmt4.PhAGs.m, Colv = NA)
-#sort columns by section
+heatmap(tmt4.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2)
+```
+```{r photosynthesis-associated heatmap by section}
 tmt4.PhAGs.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),c("B.1","M.1","H.1","A.1","B.2","M.2","H.2","A.2","B.3","M.3","H.3","A.3","B.4","M.4","H.4","A.4")])
 rownames(tmt4.PhAGs.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
-heatmap(tmt4.PhAGs.m, Colv = NA)
+heatmap(tmt4.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2)
+```
+```{r photosynthesis-associated heatmap by ratios}
+tmt4.PhAGs.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),30:37])
+rownames(tmt4.PhAGs.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
+colnames(tmt4.PhAGs.m) <- c("BM.1/MP.1", "BM.2/MP.2", "BM.3/MP.3", "BM.4/MP.4", "acs.1/B73.1", "acs.2/B73.2", "acs.3/B73.3", "acs.4/B73.4")
+heatmap(tmt4.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2)
 ```
 
