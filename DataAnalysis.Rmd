@@ -61,50 +61,6 @@ tmt <- join(x = tmt, y = Entrez, by = "Gene", type="left", match="first")
 #check that none were missed
 tmt[grep("Zema|Zeam", tmt$Gene),c("Gene","Entrez")]
 ```
-
-
-
-##Changing normalization method (?)
-```{r}
-normF <- c(1,1.18006729476876,1.37937113622264,1.46860614798218,1.33153251665837,1.19116920988042,1.16699836139188,1.53996200344565,1.58522393410753,1.47254695173594,0.851821568490102,1.22377090843489,1.27086418901632,1.45697842359028,1.29980500363454)
-
-tmt$B73.1 <- tmt$B73.1*normF[1]
-tmt$B73.2 <- tmt$B73.2*normF[2]
-tmt$B73.3 <- tmt$B73.3*normF[3]
-tmt$B73.4 <- tmt$B73.4*normF[4]
-tmt$B73.5 <- tmt$B73.5*normF[5]
-
-tmt$Mo17.1 <- tmt$Mo17.1*normF[6]
-tmt$Mo17.2 <- tmt$Mo17.2*normF[7]
-tmt$Mo17.3 <- tmt$Mo17.3*normF[8]
-tmt$Mo17.4 <- tmt$Mo17.4*normF[9]
-tmt$Mo17.5 <- tmt$Mo17.5*normF[10]
-
-tmt$BM.1 <- tmt$BM.1*normF[11]
-tmt$BM.2 <- tmt$BM.2*normF[12]
-tmt$BM.3 <- tmt$BM.3*normF[13]
-tmt$BM.4 <- tmt$BM.4*normF[14]
-tmt$BM.5 <- tmt$BM.5*normF[15]
-
-tmt$B73.1 <- tmt$B73.1/sum(tmt$B73.1)
-tmt$B73.2 <- tmt$B73.2/sum(tmt$B73.2)
-tmt$B73.3 <- tmt$B73.3/sum(tmt$B73.3)
-tmt$B73.4 <- tmt$B73.4/sum(tmt$B73.4)
-tmt$B73.5 <- tmt$B73.5/sum(tmt$B73.5)
-
-tmt$Mo17.1 <- tmt$Mo17.1/sum(tmt$Mo17.1)
-tmt$Mo17.2 <- tmt$Mo17.2/sum(tmt$Mo17.2)
-tmt$Mo17.3 <- tmt$Mo17.3/sum(tmt$Mo17.3)
-tmt$Mo17.4 <- tmt$Mo17.4/sum(tmt$Mo17.4)
-tmt$Mo17.5 <- tmt$Mo17.5/sum(tmt$Mo17.5)
-
-tmt$BM.1 <- tmt$BM.1/sum(tmt$BM.1)
-tmt$BM.2 <- tmt$BM.2/sum(tmt$BM.2)
-tmt$BM.3 <- tmt$BM.3/sum(tmt$BM.3)
-tmt$BM.4 <- tmt$BM.4/sum(tmt$BM.4)
-tmt$BM.5 <- tmt$BM.5/sum(tmt$BM.5)
-```
-
 ##calculate hyb/MP ratios
 ```{r}
 tmt$MP.1 <- rowMeans(tmt[,c("B73.1", "Mo17.1")])
