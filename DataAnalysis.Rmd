@@ -100,7 +100,13 @@ tmt.PhAGs.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),c("B73.2"
 rownames(tmt.PhAGs.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
 heatmap(tmt.PhAGs.m, Colv = NA)
 ```
-
+```{r plastid ribosome heatmap by ratios}
+colnames(tmt)
+tmt.pRibo.m <- as.matrix(tmt[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),30:37])
+rownames(tmt.pRibo.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
+colnames(tmt.pRibo.m) <- c("BM.1/MP.1", "BM.2/MP.2", "BM.3/MP.3", "BM.4/MP.4", "acs.1/B73.1", "acs.2/B73.2", "acs.3/B73.3", "acs.4/B73.4")
+heatmap(tmt.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4, col = colorspace::diverge_hsv(n = 12))
+```
 
 ##Expression Heterosis Density Curves
 ```{r tmt.BM.MP sections 1-5}
@@ -387,7 +393,6 @@ tmt4$Gene <- substr(tmt4$Accession, start = 1, stop = 14)
 tmt4 <- tmt4[,c(24,1:23)]
 colnames(tmt4)
 ```
-
 ```{r remove unwanted data}
 n <- nrow(tmt4)
 print(c("total proteins =", n), quote = F)
@@ -408,7 +413,6 @@ n4 <- nrow(tmt4)
 print(c("proteins with missing data removed =", (n3-n4)), quote = F)
 print(c("remaining proteins =", n4), quote = F)
 ```
-
 
 ##Add Entrez numbers
 ```{r add Entrez}
@@ -536,6 +540,10 @@ ggsave("tmt4.B73.Mo17.png", width = 4, height = 5)
 ```
 ##Heatmaps
 ###All Genes
+```{r}
+library(RColorBrewer)
+```
+
 ```{r all genes heatmap by clustering}
 tmt4.m <- as.matrix(tmt4[,9:24])
 rownames(tmt4.m) <- tmt4$Gene
@@ -556,7 +564,7 @@ heatmap(tmt4.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4)
 tmt4.pRibo.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),30:37])
 rownames(tmt4.pRibo.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
 colnames(tmt4.pRibo.m) <- c("BM.1/MP.1", "BM.2/MP.2", "BM.3/MP.3", "BM.4/MP.4", "acs.1/B73.1", "acs.2/B73.2", "acs.3/B73.3", "acs.4/B73.4")
-heatmap(tmt4.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4)
+heatmap(tmt4.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4, col = colorspace::diverge_hsv(n = 12))
 ```
 ###PhAGs
 ```{r photosynthesis-associated heatmap by genotype}
@@ -573,6 +581,66 @@ heatmap(tmt4.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2)
 tmt4.PhAGs.m <- as.matrix(tmt4[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),30:37])
 rownames(tmt4.PhAGs.m) <- tmt4$Gene[tmt4$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
 colnames(tmt4.PhAGs.m) <- c("BM.1/MP.1", "BM.2/MP.2", "BM.3/MP.3", "BM.4/MP.4", "acs.1/B73.1", "acs.2/B73.2", "acs.3/B73.3", "acs.4/B73.4")
-heatmap(tmt4.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2)
+heatmap(tmt4.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2, col = colorspace::diverge_hsv(n = 12))
+```
+
+
+#Experiment 4 - non-normalized
+##Import
+```{r import data}
+tmt4.nn <- read.csv("B-M-H-A leaf section 050123.csv", stringsAsFactors = F)
+
+tmt4.nn <- tmt4.nn[,c(17:23,1:16)]
+
+colnames(tmt4.nn)[8:23] <- c("B.1","B.2","B.3","B.4","M.1","M.2","M.3","M.4","H.1","H.2","H.3","H.4","A.1","A.2","A.3","A.4")
+
+tmt4.nn$Gene <- substr(tmt4.nn$Accession, start = 1, stop = 14)
+
+tmt4.nn <- tmt4.nn[,c(24,1:23)]
+colnames(tmt4.nn)
+```
+```{r remove unwanted data}
+n <- nrow(tmt4.nn)
+print(c("total proteins =", n), quote = F)
+#remove non-maize proteins
+tmt4.nn <- tmt4.nn[(grep("Zm|Zema|Zeam", tmt4.nn$Accession)),]
+n2 <- nrow(tmt4.nn)
+print(c("non-maize proteins removed =", (n-n2)), quote = F)
+#remove polymorphic proteins
+tmt4.nn.pm <- tmt4.nn[grep("only", tmt4.nn$Accession),]
+tmt4.nn <- tmt4.nn[-grep("only", tmt4.nn$Accession),]
+n3 <- nrow(tmt4.nn)
+print(c("polymorphic proteins removed =", (n2-n3)), quote = F)
+#remove rows with missing tmt4.nn data
+for(i in 9:24){
+tmt4.nn <- tmt4.nn[!tmt4.nn[,i]==0,]
+}
+n4 <- nrow(tmt4.nn)
+print(c("proteins with missing data removed =", (n3-n4)), quote = F)
+print(c("remaining proteins =", n4), quote = F)
+```
+
+##Heatmaps
+###All Genes
+```{r}
+library(RColorBrewer)
+```
+
+```{r all genes heatmap by clustering}
+tmt4.nn.m <- as.matrix(tmt4.nn[,9:24])
+rownames(tmt4.nn.m) <- tmt4.nn$Gene
+heatmap(tmt4.nn.m)
+```
+###pRibo
+```{r plastid ribosome heatmap by genotype}
+tmt4.nn.pRibo.m <- as.matrix(tmt4.nn[tmt4.nn$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),9:24])
+rownames(tmt4.nn.pRibo.m) <- tmt4.nn$Gene[tmt4.nn$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
+heatmap(tmt4.nn.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4)
+```
+###PhAGs
+```{r photosynthesis-associated heatmap by genotype}
+tmt4.nn.PhAGs.m <- as.matrix(tmt4.nn[tmt4.nn$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),9:24])
+rownames(tmt4.nn.PhAGs.m) <- tmt4.nn$Gene[tmt4.nn$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
+heatmap(tmt4.nn.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2)
 ```
 
