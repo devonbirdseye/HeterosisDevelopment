@@ -585,8 +585,8 @@ heatmap(tmt4.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2, col = colorspace::div
 ```
 
 
-#Experiment 4 - non-normalized
-##Import
+##Non-normalized
+###Import
 ```{r import data}
 tmt4.nn <- read.csv("B-M-H-A leaf section 050123.csv", stringsAsFactors = F)
 
@@ -620,8 +620,8 @@ print(c("proteins with missing data removed =", (n3-n4)), quote = F)
 print(c("remaining proteins =", n4), quote = F)
 ```
 
-##Heatmaps
-###All Genes
+###Heatmaps
+####All Genes
 ```{r}
 library(RColorBrewer)
 ```
@@ -631,13 +631,13 @@ tmt4.nn.m <- as.matrix(tmt4.nn[,9:24])
 rownames(tmt4.nn.m) <- tmt4.nn$Gene
 heatmap(tmt4.nn.m)
 ```
-###pRibo
+####pRibo
 ```{r plastid ribosome heatmap by genotype}
 tmt4.nn.pRibo.m <- as.matrix(tmt4.nn[tmt4.nn$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),9:24])
 rownames(tmt4.nn.pRibo.m) <- tmt4.nn$Gene[tmt4.nn$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
 heatmap(tmt4.nn.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4)
 ```
-###PhAGs
+####PhAGs
 ```{r photosynthesis-associated heatmap by genotype}
 tmt4.nn.PhAGs.m <- as.matrix(tmt4.nn[tmt4.nn$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),9:24])
 rownames(tmt4.nn.PhAGs.m) <- tmt4.nn$Gene[tmt4.nn$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
@@ -645,9 +645,8 @@ heatmap(tmt4.nn.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2)
 ```
 
 
-##Change normalization
-```{r}
-#normalize across sections 
+##Normalized across sections
+```{r normalize across sections}
 tmt4.n <- tmt4.nn
 tmt4.n$B.tot <- rowSums(tmt4.n[,c("B.1","B.2","B.3","B.4")])
 tmt4.n$M.tot <- rowSums(tmt4.n[,c("M.1","M.2","M.3","M.4")])
@@ -675,6 +674,11 @@ tmt4.n$A.3.tot <- tmt4.n$A.3/tmt4.n$A.tot
 tmt4.n$A.4.tot <- tmt4.n$A.4/tmt4.n$A.tot
 ```
 ###Heatmaps
+```{r all genes heatmap by clustering}
+tmt4.n.m <- as.matrix(tmt4.n[,29:44])
+rownames(tmt4.n.m) <- tmt4.n$Gene
+heatmap(tmt4.n.m)
+```
 ```{r plastid ribosome heatmap - normalized across sections}
 tmt4.n.pRibo.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),29:44])
 rownames(tmt4.n.pRibo.m) <- tmt4.n$Gene[tmt4.n$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
