@@ -619,7 +619,6 @@ n4 <- nrow(tmt4.nn)
 print(c("proteins with missing data removed =", (n3-n4)), quote = F)
 print(c("remaining proteins =", n4), quote = F)
 ```
-
 ###Heatmaps
 ####All Genes
 ```{r}
@@ -685,9 +684,10 @@ rownames(tmt4.n.pRibo.m) <- tmt4.n$Gene[tmt4.n$Gene %in% c(GOIs$PE.ribo, GOIs$NE
 heatmap(tmt4.n.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4, scale = "none")
 ```
 ```{r plastid ribosome heatmap - section totals}
-tmt4.n.pRibo.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),25:28])
-rownames(tmt4.n.pRibo.m) <- tmt4.n$Gene[tmt4.n$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
-heatmap(tmt4.n.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4)
+colnames(tmt4.n)
+tmt4.n.pRibo.m <- as.matrix(tmt4.n[,25:28])
+rownames(tmt4.n.pRibo.m) <- tmt4.n$Gene
+heatmap(tmt4.n.pRibo.m, cexCol = .8, cexRow = .4)
 ```
 ```{r photosynthesis-associated heatmap - normalized across sections}
 tmt4.n.PhAGs.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),29:44])
@@ -698,4 +698,38 @@ heatmap(tmt4.n.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2, scale = "none")
 tmt4.n.PhAGs.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),25:28])
 rownames(tmt4.n.PhAGs.m) <- tmt4.n$Gene[tmt4.n$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
 heatmap(tmt4.n.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2)
+```
+##Normalized to median of sections
+```{r}
+tmt4.n <- tmt4.nn
+tmt4.n$B.tot <- rowSums(tmt4.n[,c("B.1","B.2","B.3","B.4")])
+tmt4.n$M.tot <- rowSums(tmt4.n[,c("M.1","M.2","M.3","M.4")])
+tmt4.n$H.tot <- rowSums(tmt4.n[,c("H.1","H.2","H.3","H.4")])
+tmt4.n$A.tot <- rowSums(tmt4.n[,c("A.1","A.2","A.3","A.4")])
+```
+```{r}
+tmt4.n$M.tot.B.tot <- tmt4.n$M.tot/tmt4.n$B.tot
+tmt4.n$H.tot.B.tot <- tmt4.n$H.tot/tmt4.n$B.tot
+tmt4.n$A.tot.B.tot <- tmt4.n$A.tot/tmt4.n$B.tot
+```
+```{r}
+tmt4.n$B.norm <- tmt4.n$B.tot
+tmt4.n$M.norm <- tmt4.n$M.tot/median(tmt4.n$M.tot.B.tot)
+tmt4.n$H.norm <- tmt4.n$H.tot/median(tmt4.n$H.tot.B.tot)
+tmt4.n$A.norm <- tmt4.n$A.tot/median(tmt4.n$A.tot.B.tot)
+```
+```{r plastid ribosome heatmap}
+tmt4.n.pRibo.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),c("B.norm","M.norm","H.norm","A.norm")])
+rownames(tmt4.n.pRibo.m) <- tmt4.n$Gene[tmt4.n$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
+heatmap(tmt4.n.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4)
+```
+```{r photosynthesis-associated heatmap}
+tmt4.n.PhAGs.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),c("B.norm","M.norm","H.norm","A.norm")])
+rownames(tmt4.n.PhAGs.m) <- tmt4.n$Gene[tmt4.n$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
+heatmap(tmt4.n.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2)
+```
+```{r cytosolic ribosome heatmap}
+tmt4.n.CytoRibo.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% GOIs$CytoRibo,c("B.norm","M.norm","H.norm","A.norm")])
+rownames(tmt4.n.CytoRibo.m) <- tmt4.n$Gene[tmt4.n$Gene %in% GOIs$CytoRibo]
+heatmap(tmt4.n.CytoRibo.m, Colv = NA, cexCol = .8, cexRow = .4)
 ```
