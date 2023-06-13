@@ -13,7 +13,7 @@ library(factoextra)
 library(dplyr)
 library(ggbiplot)
 library(reshape2)
-library(ggridges)
+library(RColorBrewer)
 ```
 ```{r mgdb}
 #Downloaded from MaizeGDB 2020/05/18, 07:11pm
@@ -621,10 +621,6 @@ print(c("remaining proteins =", n4), quote = F)
 ```
 ###Heatmaps
 ####All Genes
-```{r}
-library(RColorBrewer)
-```
-
 ```{r all genes heatmap by clustering}
 tmt4.nn.m <- as.matrix(tmt4.nn[,9:24])
 rownames(tmt4.nn.m) <- tmt4.nn$Gene
@@ -683,21 +679,10 @@ tmt4.n.pRibo.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRi
 rownames(tmt4.n.pRibo.m) <- tmt4.n$Gene[tmt4.n$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
 heatmap(tmt4.n.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4, scale = "none")
 ```
-```{r plastid ribosome heatmap - section totals}
-colnames(tmt4.n)
-tmt4.n.pRibo.m <- as.matrix(tmt4.n[,25:28])
-rownames(tmt4.n.pRibo.m) <- tmt4.n$Gene
-heatmap(tmt4.n.pRibo.m, cexCol = .8, cexRow = .4)
-```
 ```{r photosynthesis-associated heatmap - normalized across sections}
 tmt4.n.PhAGs.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),29:44])
 rownames(tmt4.n.PhAGs.m) <- tmt4.n$Gene[tmt4.n$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
 heatmap(tmt4.n.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2, scale = "none")
-```
-```{r photosynthesis-associated heatmap - section totals}
-tmt4.n.PhAGs.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),25:28])
-rownames(tmt4.n.PhAGs.m) <- tmt4.n$Gene[tmt4.n$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
-heatmap(tmt4.n.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2)
 ```
 ##Normalized to median of sections
 ```{r}
