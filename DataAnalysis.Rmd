@@ -708,6 +708,11 @@ tmt4.n$M.norm <- tmt4.n$M.tot/median(tmt4.n$M.tot.B.tot)
 tmt4.n$H.norm <- tmt4.n$H.tot/median(tmt4.n$H.tot.B.tot)
 tmt4.n$A.norm <- tmt4.n$A.tot/median(tmt4.n$A.tot.B.tot)
 ```
+```{r all proteins heatmap}
+tmt4.n.all.m <- as.matrix(tmt4.n[,c("B.norm","M.norm","H.norm","A.norm")])
+rownames(tmt4.n.all.m) <- tmt4.n$Gene
+heatmap(tmt4.n.all.m, Colv = NA, cexCol = .8, cexRow = .1)
+```
 ```{r plastid ribosome heatmap}
 tmt4.n.pRibo.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),c("B.norm","M.norm","H.norm","A.norm")])
 rownames(tmt4.n.pRibo.m) <- tmt4.n$Gene[tmt4.n$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
