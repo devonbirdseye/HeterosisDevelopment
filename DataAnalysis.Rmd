@@ -626,6 +626,11 @@ tmt4.nn.m <- as.matrix(tmt4.nn[,9:24])
 rownames(tmt4.nn.m) <- tmt4.nn$Gene
 heatmap(tmt4.nn.m)
 ```
+```{r all genes heatmap by genotype}
+tmt4.nn.m <- as.matrix(tmt4.nn[,9:24])
+rownames(tmt4.nn.m) <- tmt4.nn$Gene
+heatmap(tmt4.nn.m, Colv = NA)
+```
 ####pRibo
 ```{r plastid ribosome heatmap by genotype}
 tmt4.nn.pRibo.m <- as.matrix(tmt4.nn[tmt4.nn$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),9:24])
