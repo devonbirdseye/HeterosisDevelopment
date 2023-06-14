@@ -19,8 +19,13 @@ library(RColorBrewer)
 #Downloaded from MaizeGDB 2020/05/18, 07:11pm
 mgdb <- read.csv("mgdb.csv", stringsAsFactors = F, header = F)
 colnames(mgdb) <- mgdb[5,]
-mgdb <- mgdb[-c(1:5),]
+mgdb <- mgdb[-c(1:5),c(1,12)]
+colnames(mgdb) <- c("Gene", "Entrez")
+
+Entrez <- readRDS("Entrez")
+Entrez <- rbind(mgdb, Entrez)
 ```
+
 ```{r Genes Of Interest}
 GOIs <- readRDS("GOIs")
 ```
@@ -416,7 +421,6 @@ print(c("remaining proteins =", n4), quote = F)
 
 ##Add Entrez numbers
 ```{r add Entrez}
-Entrez <- readRDS("Entrez")
 #add Entrez to data
 tmt4 <- join(x = tmt4, y = Entrez, by = "Gene", type="left", match="first")
 
@@ -445,6 +449,58 @@ tmt4$l2.B2.M2 <- log2(tmt4$B.2/tmt4$M.2)
 tmt4$l2.B3.M3 <- log2(tmt4$B.3/tmt4$M.3)
 tmt4$l2.B4.M4 <- log2(tmt4$B.4/tmt4$M.4)
 ```
+##Select proteins for enrichment
+```{r}
+tmt4 <- tmt4[order(tmt4$l2.H1.MP1),]
+tmt4.H1.MP1.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.H1.MP1")]
+tmt4.H1.MP1.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.H1.MP1")]
+
+tmt4 <- tmt4[order(tmt4$l2.H2.MP2),]
+tmt4.H2.MP2.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.H2.MP2")]
+tmt4.H2.MP2.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.H2.MP2")]
+
+tmt4 <- tmt4[order(tmt4$l2.H3.MP3),]
+tmt4.H3.MP3.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.H3.MP3")]
+tmt4.H3.MP3.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.H3.MP3")]
+
+tmt4 <- tmt4[order(tmt4$l2.H4.MP4),]
+tmt4.H4.MP4.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.H4.MP4")]
+tmt4.H4.MP4.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.H4.MP4")]
+
+tmt4 <- tmt4[order(tmt4$l2.A1.B1),]
+tmt4.A1.B1.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.A1.B1")]
+tmt4.A1.B1.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.A1.B1")]
+
+tmt4 <- tmt4[order(tmt4$l2.A2.B2),]
+tmt4.A2.B2.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.A2.B2")]
+tmt4.A2.B2.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.A2.B2")]
+
+tmt4 <- tmt4[order(tmt4$l2.A3.B3),]
+tmt4.A3.B3.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.A3.B3")]
+tmt4.A3.B3.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.A3.B3")]
+
+tmt4 <- tmt4[order(tmt4$l2.A4.B4),]
+tmt4.A4.B4.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.A4.B4")]
+tmt4.A4.B4.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.A4.B4")]
+```
+```{r}
+write.csv(tmt4.H1.MP1.up, "tmt4.H1.MP1.up.csv", row.names = F)
+write.csv(tmt4.H2.MP2.up, "tmt4.H2.MP2.up.csv", row.names = F)
+write.csv(tmt4.H3.MP3.up, "tmt4.H3.MP3.up.csv", row.names = F)
+write.csv(tmt4.H4.MP4.up, "tmt4.H4.MP4.up.csv", row.names = F)
+```
+```{r}
+write.csv(tmt4.A1.B1.up, "tmt4.A1.B1.up.csv", row.names = F)
+write.csv(tmt4.A2.B2.up, "tmt4.A2.B2.up.csv", row.names = F)
+write.csv(tmt4.A3.B3.up, "tmt4.A3.B3.up.csv", row.names = F)
+write.csv(tmt4.A4.B4.up, "tmt4.A4.B4.up.csv", row.names = F)
+```
+```{r}
+write.csv(tmt4[c("Entrez", "Gene","Accession","Protein")], "tmt4.all.csv")
+```
+
+
+
 ##Density plots
 ```{r BM/MP density}
 tmt4.BM.MP <- tmt4[,c("Accession","Gene","l2.H1.MP1", "l2.H2.MP2", "l2.H3.MP3","l2.H4.MP4")]
@@ -689,6 +745,7 @@ tmt4.n.PhAGs.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),
 rownames(tmt4.n.PhAGs.m) <- tmt4.n$Gene[tmt4.n$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
 heatmap(tmt4.n.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2, scale = "none")
 ```
+
 ##Normalized to median of sections
 ```{r}
 tmt4.n <- tmt4.nn
@@ -728,3 +785,4 @@ tmt4.n.CytoRibo.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% GOIs$CytoRibo,c("B.norm",
 rownames(tmt4.n.CytoRibo.m) <- tmt4.n$Gene[tmt4.n$Gene %in% GOIs$CytoRibo]
 heatmap(tmt4.n.CytoRibo.m, Colv = NA, cexCol = .8, cexRow = .4)
 ```
+
