@@ -451,38 +451,55 @@ tmt4$l2.B4.M4 <- log2(tmt4$B.4/tmt4$M.4)
 ```
 ##Select proteins for enrichment
 ```{r}
-tmt4 <- tmt4[order(tmt4$l2.H1.MP1),]
-tmt4.H1.MP1.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.H1.MP1")]
-tmt4.H1.MP1.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.H1.MP1")]
-
-tmt4 <- tmt4[order(tmt4$l2.H2.MP2),]
-tmt4.H2.MP2.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.H2.MP2")]
-tmt4.H2.MP2.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.H2.MP2")]
-
-tmt4 <- tmt4[order(tmt4$l2.H3.MP3),]
-tmt4.H3.MP3.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.H3.MP3")]
-tmt4.H3.MP3.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.H3.MP3")]
-
-tmt4 <- tmt4[order(tmt4$l2.H4.MP4),]
-tmt4.H4.MP4.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.H4.MP4")]
-tmt4.H4.MP4.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.H4.MP4")]
-
-tmt4 <- tmt4[order(tmt4$l2.A1.B1),]
-tmt4.A1.B1.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.A1.B1")]
-tmt4.A1.B1.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.A1.B1")]
-
-tmt4 <- tmt4[order(tmt4$l2.A2.B2),]
-tmt4.A2.B2.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.A2.B2")]
-tmt4.A2.B2.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.A2.B2")]
-
-tmt4 <- tmt4[order(tmt4$l2.A3.B3),]
-tmt4.A3.B3.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.A3.B3")]
-tmt4.A3.B3.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.A3.B3")]
-
-tmt4 <- tmt4[order(tmt4$l2.A4.B4),]
-tmt4.A4.B4.up <- tmt4[(nrow(tmt4)-100:nrow(tmt4)),c("Entrez", "Gene","Accession","Protein","l2.A4.B4")]
-tmt4.A4.B4.down <- tmt4[1:100, c("Entrez", "Gene","Accession","Protein","l2.A4.B4")]
+tmt4.H1.MP1.up <- tmt4[tmt4$l2.H1.MP1 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.H1.MP1")]
+tmt4.H1.MP1.down <- tmt4[tmt4$l2.H1.MP1 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.H1.MP1")]
+nrow(tmt4.H1.MP1.up)
+nrow(tmt4.H1.MP1.down)
 ```
+```{r}
+tmt4.H2.MP2.up <- tmt4[tmt4$l2.H2.MP2 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.H2.MP2")]
+tmt4.H2.MP2.down <- tmt4[tmt4$l2.H2.MP2 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.H2.MP2")]
+nrow(tmt4.H2.MP2.up)
+nrow(tmt4.H2.MP2.down)
+```
+```{r}
+tmt4.H3.MP3.up <- tmt4[tmt4$l2.H3.MP3 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.H3.MP3")]
+tmt4.H3.MP3.down <- tmt4[tmt4$l2.H3.MP3 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.H3.MP3")]
+nrow(tmt4.H3.MP3.up)
+nrow(tmt4.H3.MP3.down)
+```
+```{r}
+tmt4.H4.MP4.up <- tmt4[tmt4$l2.H4.MP4 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.H4.MP4")]
+tmt4.H4.MP4.down <- tmt4[tmt4$l2.H4.MP4 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.H4.MP4")]
+nrow(tmt4.H4.MP4.up)
+nrow(tmt4.H4.MP4.down)
+```
+```{r}
+tmt4.A1.B1.up <- tmt4[tmt4$l2.A1.B1 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.A1.B1")]
+tmt4.A1.B1.down <- tmt4[tmt4$l2.A1.B1 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.A1.B1")]
+nrow(tmt4.A1.B1.up)
+nrow(tmt4.A1.B1.down)
+```
+```{r}
+tmt4.A2.B2.up <- tmt4[tmt4$l2.A2.B2 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.A2.B2")]
+tmt4.A2.B2.down <- tmt4[tmt4$l2.A2.B2 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.A2.B2")]
+nrow(tmt4.A2.B2.up)
+nrow(tmt4.A2.B2.down)
+```
+```{r}
+tmt4.A3.B3.up <- tmt4[tmt4$l2.A3.B3 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.A3.B3")]
+tmt4.A3.B3.down <- tmt4[tmt4$l2.A3.B3 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.A3.B3")]
+nrow(tmt4.A3.B3.up)
+nrow(tmt4.A3.B3.down)
+```
+```{r}
+tmt4.A4.B4.up <- tmt4[tmt4$l2.A4.B4 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.A4.B4")]
+tmt4.A4.B4.down <- tmt4[tmt4$l2.A4.B4 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.A4.B4")]
+nrow(tmt4.A4.B4.up)
+nrow(tmt4.A4.B4.down)
+```
+
+
 ```{r}
 write.csv(tmt4.H1.MP1.up, "tmt4.H1.MP1.up.csv", row.names = F)
 write.csv(tmt4.H2.MP2.up, "tmt4.H2.MP2.up.csv", row.names = F)
@@ -498,8 +515,48 @@ write.csv(tmt4.A4.B4.up, "tmt4.A4.B4.up.csv", row.names = F)
 ```{r}
 write.csv(tmt4[c("Entrez", "Gene","Accession","Protein")], "tmt4.all.csv")
 ```
+```{r}
+tmt4.1.up <- tmt4.H1.MP1.up[tmt4.H1.MP1.up$Gene %in% tmt4.A1.B1.up$Gene,c("Entrez", "Gene","Accession","Protein")]
+tmt4.2.up <- tmt4.H2.MP2.up[tmt4.H2.MP2.up$Gene %in% tmt4.A2.B2.up$Gene,c("Entrez", "Gene","Accession","Protein")]
+tmt4.3.up <- tmt4.H3.MP3.up[tmt4.H3.MP3.up$Gene %in% tmt4.A3.B3.up$Gene,c("Entrez", "Gene","Accession","Protein")]
+tmt4.4.up <- tmt4.H4.MP4.up[tmt4.H4.MP4.up$Gene %in% tmt4.A4.B4.up$Gene,c("Entrez", "Gene","Accession","Protein")]
+```
+```{r}
+write.csv(tmt4.1.up, "tmt4.1.up.csv", row.names = F)
+write.csv(tmt4.2.up, "tmt4.2.up.csv", row.names = F)
+write.csv(tmt4.3.up, "tmt4.3.up.csv", row.names = F)
+write.csv(tmt4.4.up, "tmt4.4.up.csv", row.names = F)
+```
 
+```{r}
+tmt4.1.down <- tmt4.H1.MP1.down[tmt4.H1.MP1.down$Gene %in% tmt4.A1.B1.down$Gene,c("Entrez", "Gene","Accession","Protein")]
+tmt4.2.down <- tmt4.H2.MP2.down[tmt4.H2.MP2.down$Gene %in% tmt4.A2.B2.down$Gene,c("Entrez", "Gene","Accession","Protein")]
+tmt4.3.down <- tmt4.H3.MP3.down[tmt4.H3.MP3.down$Gene %in% tmt4.A3.B3.down$Gene,c("Entrez", "Gene","Accession","Protein")]
+tmt4.4.down <- tmt4.H4.MP4.down[tmt4.H4.MP4.down$Gene %in% tmt4.A4.B4.down$Gene,c("Entrez", "Gene","Accession","Protein")]
+```
+```{r}
+write.csv(tmt4.1.down, "tmt4.1.down.csv", row.names = F)
+write.csv(tmt4.2.down, "tmt4.2.down.csv", row.names = F)
+write.csv(tmt4.3.down, "tmt4.3.down.csv", row.names = F)
+write.csv(tmt4.4.down, "tmt4.4.down.csv", row.names = F)
+```
 
+```{r CorFun}
+CorFun <- function(x, xcol, ycol){
+  for(i in 1:nrow(x)){
+    v1 <- as.numeric(x[i,xcol])
+    v2 <- as.numeric(x[i,ycol])
+    c <- cor(v1, v2, method = "pearson")
+    x[i,"cor"]<- c
+  }
+  x
+}
+```
+```{r}
+colnames(tmt4)
+tmt4.cor <- CorFun(tmt4, 30:33,34:37)
+write.csv(tmt4.cor[order(-tmt4.cor$cor), c("cor", "Entrez", "Gene","Accession","Protein","l2.H1.MP1","l2.H2.MP2","l2.H3.MP3","l2.H4.MP4","l2.A1.B1","l2.A2.B2","l2.A3.B3","l2.A4.B4")], row.names = F, file = "tmt4.cor.csv")
+```
 
 ##Density plots
 ```{r BM/MP density}
