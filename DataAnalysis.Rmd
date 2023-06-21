@@ -555,8 +555,72 @@ CorFun <- function(x, xcol, ycol){
 ```{r}
 colnames(tmt4)
 tmt4.cor <- CorFun(tmt4, 30:33,34:37)
-write.csv(tmt4.cor[order(-tmt4.cor$cor), c("cor", "Entrez", "Gene","Accession","Protein","l2.H1.MP1","l2.H2.MP2","l2.H3.MP3","l2.H4.MP4","l2.A1.B1","l2.A2.B2","l2.A3.B3","l2.A4.B4")], row.names = F, file = "tmt4.cor.csv")
 ```
+```{r}
+tmt4.cor.95 <- tmt4.cor[tmt4.cor$cor>0.95,]
+
+tmt4.cor.95.1 <- tmt4.cor.95[(tmt4.cor.95$l2.H1.MP1 > log2(1.1) & tmt4.cor.95$l2.A1.B1 > log2(1.1)) | (tmt4.cor.95$l2.H1.MP1 < log2(0.9) & tmt4.cor.95$l2.A1.B1 < log2(0.9)),]
+
+tmt4.cor.95.2 <- tmt4.cor.95[(tmt4.cor.95$l2.H2.MP2 > log2(1.1) & tmt4.cor.95$l2.A2.B2 > log2(1.1)) | (tmt4.cor.95$l2.H2.MP2 < log2(0.9) & tmt4.cor.95$l2.A2.B2 < log2(0.9)),]
+
+tmt4.cor.95.3 <- tmt4.cor.95[(tmt4.cor.95$l2.H3.MP3 > log2(1.1) & tmt4.cor.95$l2.A3.B3 > log2(1.1)) | (tmt4.cor.95$l2.H3.MP3 < log2(0.9) & tmt4.cor.95$l2.A3.B3 < log2(0.9)),]
+
+tmt4.cor.95.4 <- tmt4.cor.95[(tmt4.cor.95$l2.H4.MP4 > log2(1.1) & tmt4.cor.95$l2.A4.B4 > log2(1.1)) | (tmt4.cor.95$l2.H4.MP4 < log2(0.9) & tmt4.cor.95$l2.A4.B4 < log2(0.9)),]
+
+tmt4.cor.95.all <- unique(rbind(tmt4.cor.95.1, tmt4.cor.95.2, tmt4.cor.95.3, tmt4.cor.95.4))
+
+nrow(tmt4.cor.95)
+nrow(tmt4.cor.95.all)
+```
+```{r}
+write.csv(tmt4.cor.95.all[order(-tmt4.cor.95.all$cor), c("cor", "Entrez", "Gene","Accession","Protein","l2.H1.MP1","l2.H2.MP2","l2.H3.MP3","l2.H4.MP4","l2.A1.B1","l2.A2.B2","l2.A3.B3","l2.A4.B4")], row.names = F, file = "tmt4.cor.95.all.csv")
+```
+
+```{r}
+tmt4.cor.95.all$l2.H1.MP1[tmt4.cor.95.all$l2.H1.MP1 > 1] <- 1
+tmt4.cor.95.all$l2.H2.MP2[tmt4.cor.95.all$l2.H2.MP2 > 1] <- 1
+tmt4.cor.95.all$l2.H3.MP3[tmt4.cor.95.all$l2.H3.MP3 > 1] <- 1
+tmt4.cor.95.all$l2.H4.MP4[tmt4.cor.95.all$l2.H4.MP4 > 1] <- 1
+
+tmt4.cor.95.all$l2.A1.B1[tmt4.cor.95.all$l2.A1.B1 > 1] <- 1
+tmt4.cor.95.all$l2.A2.B2[tmt4.cor.95.all$l2.A2.B2 > 1] <- 1
+tmt4.cor.95.all$l2.A3.B3[tmt4.cor.95.all$l2.A3.B3 > 1] <- 1
+tmt4.cor.95.all$l2.A4.B4[tmt4.cor.95.all$l2.A4.B4 > 1] <- 1
+```
+```{r}
+tmt4.cor.95.all$l2.H1.MP1[tmt4.cor.95.all$l2.H1.MP1 < -1] <- -1
+tmt4.cor.95.all$l2.H2.MP2[tmt4.cor.95.all$l2.H2.MP2 < -1] <- -1
+tmt4.cor.95.all$l2.H3.MP3[tmt4.cor.95.all$l2.H3.MP3 < -1] <- -1
+tmt4.cor.95.all$l2.H4.MP4[tmt4.cor.95.all$l2.H4.MP4 < -1] <- -1
+
+tmt4.cor.95.all$l2.A1.B1[tmt4.cor.95.all$l2.A1.B1 < -1] <- -1
+tmt4.cor.95.all$l2.A2.B2[tmt4.cor.95.all$l2.A2.B2 < -1] <- -1
+tmt4.cor.95.all$l2.A3.B3[tmt4.cor.95.all$l2.A3.B3 < -1] <- -1
+tmt4.cor.95.all$l2.A4.B4[tmt4.cor.95.all$l2.A4.B4 < -1] <- -1
+```
+
+
+```{r}
+tmt4.cor.95.all.m <- as.matrix(tmt4.cor.95.all[,30:37])
+rownames(tmt4.cor.95.all.m) <- tmt4.cor.95.all$Gene
+colnames(tmt4.cor.95.all.m) <- c("BM.1/MP.1", "BM.2/MP.2", "BM.3/MP.3", "BM.4/MP.4", "acs.1/B73.1", "acs.2/B73.2", "acs.3/B73.3", "acs.4/B73.4")
+heatmap(tmt4.cor.95.all.m, cexCol = .8, cexRow = .1, col = colorspace::diverge_hsv(n = 12), scale = "none")
+```
+
+```{r}
+translation <- unique(c(100194112, 100283974, 100282717, 100272255, 100282772, 100194112, 100382451, 100283974, 100192778, 100282772, 100286120, 100272955, 100284180, 100285173, 100283907, 100282717, 100272255, 845232, 100284180, 100194112, 100285173, 100382451, 100283974, 100283907, 100282717, 100192778, 100272255, 100282772, 100286120, 845232, 100284180, 100194112, 100285173, 100382451, 100283974, 100283907, 100282717, 100192778, 100272255, 100282772, 100286120, 845232, 100194088, 100284180, 100382451, 100282717, 100192778, 542750, 100194058, 100286120, 845232, 100284180, 100382451, 100282717, 100192778, 100286120, 845232))
+```
+```{r}
+photosynthesis <- unique(c(542212, 100277775, 542372, 542393, 100283327, 100282820, 100193737, 542212, 100277775, 542177, 100272890, 542372, 542393, 103635678, 100276890, 100281235, 100382672, 100272890, 100282043, 100276890, 100281235, 100282043, 100276890, 100281235, 100282214, 542321, 100282043))
+```
+```{r}
+length(photosynthesis)
+```
+
+```{r}
+DNAbinding <- unique(c(103639303, 103625929, 100274138, 542076, 100501984, 103639303, 103625929, 100274138, 100501984, 103639303, 103653048, 103625929, 100274138, 100501984, 100384748, 100274242, 103639303, 542007, 103625929, 100274138, 100501984, 100274242, 103639303, 103625929, 100274138, 100501984, 100274242, 100277594, 542007, 100384575, 100384655, 100193200, 100191211, 100286254, 103639303, 103625929, 100274138, 103645753, 100501984, 100274242, 103640333))
+```
+
 
 ##Density plots
 ```{r BM/MP density}
@@ -656,11 +720,16 @@ ggsave("tmt4.B73.Mo17.png", width = 4, height = 5)
 ```{r}
 library(RColorBrewer)
 ```
-
 ```{r all genes heatmap by clustering}
 tmt4.m <- as.matrix(tmt4[,9:24])
 rownames(tmt4.m) <- tmt4$Gene
 heatmap(tmt4.m)
+```
+```{r all genes by ratios}
+tmt4.pRibo.m <- as.matrix(tmt4[,30:37])
+rownames(tmt4.pRibo.m) <- tmt4$Gene
+colnames(tmt4.pRibo.m) <- c("BM.1/MP.1", "BM.2/MP.2", "BM.3/MP.3", "BM.4/MP.4", "acs.1/B73.1", "acs.2/B73.2", "acs.3/B73.3", "acs.4/B73.4")
+heatmap(tmt4.pRibo.m, cexCol = .8, cexRow = .4, col = colorspace::diverge_hsv(n = 12))
 ```
 ###pRibo
 ```{r plastid ribosome heatmap by genotype}
@@ -791,6 +860,21 @@ tmt4.n$A.4.tot <- tmt4.n$A.4/tmt4.n$A.tot
 tmt4.n.m <- as.matrix(tmt4.n[,29:44])
 rownames(tmt4.n.m) <- tmt4.n$Gene
 heatmap(tmt4.n.m)
+```
+```{r}
+colnames(tmt4.n)
+```
+```{r}
+tmt4.cor.95
+```
+
+
+```{r all genes heatmap by clustering}
+tmt4.n.cor <- tmt4.n[tmt4.n$Gene%in%tmt4.cor.95$Gene,]
+tmt4.n.cor.m <- as.matrix(tmt4.n.cor[,29:44])
+rownames(tmt4.n.cor.m) <- tmt4.n.cor$Gene
+heatmap(tmt4.n.cor.m)
+
 ```
 ```{r plastid ribosome heatmap - normalized across sections}
 tmt4.n.pRibo.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),29:44])
