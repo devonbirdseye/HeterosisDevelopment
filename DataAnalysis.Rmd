@@ -112,6 +112,13 @@ rownames(tmt.pRibo.m) <- tmt$Gene[tmt$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
 colnames(tmt.pRibo.m) <- c("BM.1/MP.1", "BM.2/MP.2", "BM.3/MP.3", "BM.4/MP.4", "acs.1/B73.1", "acs.2/B73.2", "acs.3/B73.3", "acs.4/B73.4")
 heatmap(tmt.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4, col = colorspace::diverge_hsv(n = 12))
 ```
+```{r cytosolic ribosome heatmap by ratios}
+colnames(tmt)
+tmt.CytoRibo.m <- as.matrix(tmt[tmt$Gene %in% GOIs$CytoRibo,30:37])
+rownames(tmt.CytoRibo.m) <- tmt$Gene[tmt$Gene %in% GOIs$CytoRibo]
+colnames(tmt.CytoRibo.m) <- c("BM.1/MP.1", "BM.2/MP.2", "BM.3/MP.3", "BM.4/MP.4", "acs.1/B73.1", "acs.2/B73.2", "acs.3/B73.3", "acs.4/B73.4")
+heatmap(tmt.CytoRibo.m, Colv = NA, cexCol = .8, cexRow = .4, col = colorspace::diverge_hsv(n = 12))
+```
 
 ##Expression Heterosis Density Curves
 ```{r tmt.BM.MP sections 1-5}
@@ -449,72 +456,148 @@ tmt4$l2.B2.M2 <- log2(tmt4$B.2/tmt4$M.2)
 tmt4$l2.B3.M3 <- log2(tmt4$B.3/tmt4$M.3)
 tmt4$l2.B4.M4 <- log2(tmt4$B.4/tmt4$M.4)
 ```
-##Select proteins for enrichment
+##Functional Enrichment
+###GO term enrichment analysis functions
+```{r gamer_ReadIn, include=FALSE}
+library(topGO)
+library(AnnotationDbi)
+# Read in Maize GAMER GO dataset, which lists maize V4 accessions with all associated GO terms (Wimalanathan et al. 2018) downloaded from https://datacommons.cyverse.org/browse/iplant/home/shared/commons_repo/curated/Carolyn_Lawrence-Dill_maize-GAMER_maize.B73_RefGen_v4_Zm00001d.2_Oct_2017.r1/e.agg_data
+GAMER <- read.delim("maize.B73.AGPv4.aggregate.gaf", sep = "\t", header = FALSE)
+colnames(GAMER) <- c("db", "db_object_id", "db_object_symbol", "qualifier", "term_accession", "db_reference", "evidence_code", "with", "aspect", "db_object_name", "db_object_synonym", "db_object_type", "taxon", "date", "assigned_by", "annotation_extension", "gene_product_form_id")
+gamer <- GAMER[-(1:2),]
+gamer$Term <- Term(as.character(gamer$term_accession))
+```
 ```{r}
-tmt4.H1.MP1.up <- tmt4[tmt4$l2.H1.MP1 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.H1.MP1")]
-tmt4.H1.MP1.down <- tmt4[tmt4$l2.H1.MP1 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.H1.MP1")]
+#Trim gamer to only those genes detected in our data, to use as background for enrichment
+GamerCut <- gamer[(gamer$db_object_id %in% tmt4$Gene),]
+```
+```{r GOanalysisGOdata_Function}
+## Build GOdata object
+# EnrichedDF = AHP/BLP/AMP/BMP output
+# GamerCut = the dataframe created above
+# ont = "BP", "MF", or "CC"
+GOanalysisGodata <- function(EnrichedDF, GamerCut, ont, nodesize = 1){
+  gene2GO_TissueCut <- split((as.character(GamerCut$term_accession)),GamerCut$db_object_id)
+  gene2GOb_TissueCut <- gene2GO_TissueCut[-2]
+  str(head(gene2GOb_TissueCut))
+  geneNames_tissuecut <- names(gene2GOb_TissueCut)
+  myInterestingGenes <- EnrichedDF$Gene
+  geneList <- factor(as.integer(geneNames_tissuecut %in% myInterestingGenes))
+  names(geneList) <- geneNames_tissuecut
+  GOdata <- new("topGOdata", ontology = ont, allGenes = geneList, annot = annFUN.gene2GO, nodeSize=nodesize, gene2GO = gene2GOb_TissueCut)
+  GOdata
+}
+```
+```{r GOanalysisMap_Function}
+## GO analysis function to generate map of GO terms
+# Godata = Godata object (output of GoanalysisGodata function)
+# pdfname = and desired output pdf name in quotes
+GOanalysisMap <- function(GOdata, pdfname, signodes=5){
+  resultFis <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
+  printGraph(GOdata, resultFis, firstSigNodes = signodes, fn.prefix = pdfname, useInfo = "all", pdfSW = TRUE)
+}
+```
+```{r GOanalysisDF_Function}
+## GO analysis function, same as above, except to generate dataframe summary of top 20 of GO terms instead of map
+# Godata = Godata object (output of GoanalysisGodata function)
+# pdfname = and desired output pdf name in quotes
+GOanalysisDF <- function(GOdata, topnodes=50){
+resultFis <- runTest(GOdata, algorithm = "classic", statistic = "fisher")
+test.statF <- new("classicCount", testStatistic = GOFisherTest, name = "Fisher test")
+resultFisher <- getSigGroups(GOdata, test.statF)
+test.statKS <- new("classicScore", testStatistic = GOKSTest, name = "KS tests")
+resultKS <- getSigGroups(GOdata, test.statKS)
+test.statRW <- new("weightCount", testStatistic = GOFisherTest, name = "Fisher test", sigRatio = "ratio")
+resultWeight <- getSigGroups(GOdata, test.statRW)
+DF <- GenTable(GOdata, classic = resultFis, KS = resultKS, weight = resultWeight, orderBy = "classic", ranksOf = "classic", topNodes = topnodes)
+DF
+}
+```
+###All proteins for background
+```{r}
+write.csv(tmt4[c("Entrez", "Gene","Accession","Protein")], "tmt4.all.csv")
+```
+###Define up/down proteins
+```{r}
+tmt4.H1.MP1.up <- tmt4[tmt4$l2.H1.MP1 > log2(100/85),c("Entrez", "Gene","Accession","Protein","l2.H1.MP1")]
+tmt4.H1.MP1.down <- tmt4[tmt4$l2.H1.MP1 < log2(85/100), c("Entrez", "Gene","Accession","Protein","l2.H1.MP1")]
 nrow(tmt4.H1.MP1.up)
 nrow(tmt4.H1.MP1.down)
 ```
 ```{r}
-tmt4.H2.MP2.up <- tmt4[tmt4$l2.H2.MP2 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.H2.MP2")]
-tmt4.H2.MP2.down <- tmt4[tmt4$l2.H2.MP2 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.H2.MP2")]
+tmt4.H2.MP2.up <- tmt4[tmt4$l2.H2.MP2 > log2(100/85),c("Entrez", "Gene","Accession","Protein","l2.H2.MP2")]
+tmt4.H2.MP2.down <- tmt4[tmt4$l2.H2.MP2 < log2(85/100), c("Entrez", "Gene","Accession","Protein","l2.H2.MP2")]
 nrow(tmt4.H2.MP2.up)
 nrow(tmt4.H2.MP2.down)
 ```
 ```{r}
-tmt4.H3.MP3.up <- tmt4[tmt4$l2.H3.MP3 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.H3.MP3")]
-tmt4.H3.MP3.down <- tmt4[tmt4$l2.H3.MP3 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.H3.MP3")]
+tmt4.H3.MP3.up <- tmt4[tmt4$l2.H3.MP3 > log2(100/85),c("Entrez", "Gene","Accession","Protein","l2.H3.MP3")]
+tmt4.H3.MP3.down <- tmt4[tmt4$l2.H3.MP3 < log2(85/100), c("Entrez", "Gene","Accession","Protein","l2.H3.MP3")]
 nrow(tmt4.H3.MP3.up)
 nrow(tmt4.H3.MP3.down)
 ```
 ```{r}
-tmt4.H4.MP4.up <- tmt4[tmt4$l2.H4.MP4 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.H4.MP4")]
-tmt4.H4.MP4.down <- tmt4[tmt4$l2.H4.MP4 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.H4.MP4")]
+tmt4.H4.MP4.up <- tmt4[tmt4$l2.H4.MP4 > log2(100/85),c("Entrez", "Gene","Accession","Protein","l2.H4.MP4")]
+tmt4.H4.MP4.down <- tmt4[tmt4$l2.H4.MP4 < log2(85/100), c("Entrez", "Gene","Accession","Protein","l2.H4.MP4")]
 nrow(tmt4.H4.MP4.up)
 nrow(tmt4.H4.MP4.down)
 ```
 ```{r}
-tmt4.A1.B1.up <- tmt4[tmt4$l2.A1.B1 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.A1.B1")]
-tmt4.A1.B1.down <- tmt4[tmt4$l2.A1.B1 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.A1.B1")]
+tmt4.A1.B1.up <- tmt4[tmt4$l2.A1.B1 > log2(100/85),c("Entrez", "Gene","Accession","Protein","l2.A1.B1")]
+tmt4.A1.B1.down <- tmt4[tmt4$l2.A1.B1 < log2(85/100), c("Entrez", "Gene","Accession","Protein","l2.A1.B1")]
 nrow(tmt4.A1.B1.up)
 nrow(tmt4.A1.B1.down)
 ```
 ```{r}
-tmt4.A2.B2.up <- tmt4[tmt4$l2.A2.B2 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.A2.B2")]
-tmt4.A2.B2.down <- tmt4[tmt4$l2.A2.B2 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.A2.B2")]
+tmt4.A2.B2.up <- tmt4[tmt4$l2.A2.B2 > log2(100/85),c("Entrez", "Gene","Accession","Protein","l2.A2.B2")]
+tmt4.A2.B2.down <- tmt4[tmt4$l2.A2.B2 < log2(85/100), c("Entrez", "Gene","Accession","Protein","l2.A2.B2")]
 nrow(tmt4.A2.B2.up)
 nrow(tmt4.A2.B2.down)
 ```
 ```{r}
-tmt4.A3.B3.up <- tmt4[tmt4$l2.A3.B3 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.A3.B3")]
-tmt4.A3.B3.down <- tmt4[tmt4$l2.A3.B3 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.A3.B3")]
+tmt4.A3.B3.up <- tmt4[tmt4$l2.A3.B3 > log2(100/85),c("Entrez", "Gene","Accession","Protein","l2.A3.B3")]
+tmt4.A3.B3.down <- tmt4[tmt4$l2.A3.B3 < log2(85/100), c("Entrez", "Gene","Accession","Protein","l2.A3.B3")]
 nrow(tmt4.A3.B3.up)
 nrow(tmt4.A3.B3.down)
 ```
 ```{r}
-tmt4.A4.B4.up <- tmt4[tmt4$l2.A4.B4 > log2(1.25),c("Entrez", "Gene","Accession","Protein","l2.A4.B4")]
-tmt4.A4.B4.down <- tmt4[tmt4$l2.A4.B4 < log2(0.75), c("Entrez", "Gene","Accession","Protein","l2.A4.B4")]
+tmt4.A4.B4.up <- tmt4[tmt4$l2.A4.B4 > log2(100/85),c("Entrez", "Gene","Accession","Protein","l2.A4.B4")]
+tmt4.A4.B4.down <- tmt4[tmt4$l2.A4.B4 < log2(85/100), c("Entrez", "Gene","Accession","Protein","l2.A4.B4")]
 nrow(tmt4.A4.B4.up)
 nrow(tmt4.A4.B4.down)
 ```
-
-
 ```{r}
 write.csv(tmt4.H1.MP1.up, "tmt4.H1.MP1.up.csv", row.names = F)
 write.csv(tmt4.H2.MP2.up, "tmt4.H2.MP2.up.csv", row.names = F)
 write.csv(tmt4.H3.MP3.up, "tmt4.H3.MP3.up.csv", row.names = F)
 write.csv(tmt4.H4.MP4.up, "tmt4.H4.MP4.up.csv", row.names = F)
 ```
+###Subset proteins uniquely up/down in hybrid
 ```{r}
-write.csv(tmt4.A1.B1.up, "tmt4.A1.B1.up.csv", row.names = F)
-write.csv(tmt4.A2.B2.up, "tmt4.A2.B2.up.csv", row.names = F)
-write.csv(tmt4.A3.B3.up, "tmt4.A3.B3.up.csv", row.names = F)
-write.csv(tmt4.A4.B4.up, "tmt4.A4.B4.up.csv", row.names = F)
+tmt4.H1.MP1.up.only <- tmt4.H1.MP1.up[!tmt4.H1.MP1.up$Gene %in% tmt4.A1.B1.up$Gene,c("Entrez", "Gene","Accession","Protein")]
+tmt4.H2.MP2.up.only <- tmt4.H2.MP2.up[!tmt4.H2.MP2.up$Gene %in% tmt4.A2.B2.up$Gene,c("Entrez", "Gene","Accession","Protein")]
+tmt4.H3.MP3.up.only <- tmt4.H3.MP3.up[!tmt4.H3.MP3.up$Gene %in% tmt4.A3.B3.up$Gene,c("Entrez", "Gene","Accession","Protein")]
+tmt4.H4.MP4.up.only <- tmt4.H4.MP4.up[!tmt4.H4.MP4.up$Gene %in% tmt4.A4.B4.up$Gene,c("Entrez", "Gene","Accession","Protein")]
 ```
 ```{r}
-write.csv(tmt4[c("Entrez", "Gene","Accession","Protein")], "tmt4.all.csv")
+write.csv(tmt4.H1.MP1.up.only, "tmt4.H1.MP1.up.only.csv", row.names = F)
+write.csv(tmt4.H2.MP2.up.only, "tmt4.H2.MP2.up.only.csv", row.names = F)
+write.csv(tmt4.H3.MP3.up.only, "tmt4.H3.MP3.up.only.csv", row.names = F)
+write.csv(tmt4.H4.MP4.up.only, "tmt4.H4.MP4.up.only.csv", row.names = F)
 ```
+```{r}
+tmt4.H1.MP1.down.only <- tmt4.H1.MP1.down[!tmt4.H1.MP1.down$Gene %in% tmt4.A1.B1.down$Gene,c("Entrez", "Gene","Accession","Protein")]
+tmt4.H2.MP2.down.only <- tmt4.H2.MP2.down[!tmt4.H2.MP2.down$Gene %in% tmt4.A2.B2.down$Gene,c("Entrez", "Gene","Accession","Protein")]
+tmt4.H3.MP3.down.only <- tmt4.H3.MP3.down[!tmt4.H3.MP3.down$Gene %in% tmt4.A3.B3.down$Gene,c("Entrez", "Gene","Accession","Protein")]
+tmt4.H4.MP4.down.only <- tmt4.H4.MP4.down[!tmt4.H4.MP4.down$Gene %in% tmt4.A4.B4.down$Gene,c("Entrez", "Gene","Accession","Protein")]
+```
+```{r}
+write.csv(tmt4.H1.MP1.down.only, "tmt4.H1.MP1.down.only.csv", row.names = F)
+write.csv(tmt4.H2.MP2.down.only, "tmt4.H2.MP2.down.only.csv", row.names = F)
+write.csv(tmt4.H3.MP3.down.only, "tmt4.H3.MP3.down.only.csv", row.names = F)
+write.csv(tmt4.H4.MP4.down.only, "tmt4.H4.MP4.down.only.csv", row.names = F)
+```
+###Subset proteins up/down in both hybrid and mutant
 ```{r}
 tmt4.1.up <- tmt4.H1.MP1.up[tmt4.H1.MP1.up$Gene %in% tmt4.A1.B1.up$Gene,c("Entrez", "Gene","Accession","Protein")]
 tmt4.2.up <- tmt4.H2.MP2.up[tmt4.H2.MP2.up$Gene %in% tmt4.A2.B2.up$Gene,c("Entrez", "Gene","Accession","Protein")]
@@ -527,7 +610,6 @@ write.csv(tmt4.2.up, "tmt4.2.up.csv", row.names = F)
 write.csv(tmt4.3.up, "tmt4.3.up.csv", row.names = F)
 write.csv(tmt4.4.up, "tmt4.4.up.csv", row.names = F)
 ```
-
 ```{r}
 tmt4.1.down <- tmt4.H1.MP1.down[tmt4.H1.MP1.down$Gene %in% tmt4.A1.B1.down$Gene,c("Entrez", "Gene","Accession","Protein")]
 tmt4.2.down <- tmt4.H2.MP2.down[tmt4.H2.MP2.down$Gene %in% tmt4.A2.B2.down$Gene,c("Entrez", "Gene","Accession","Protein")]
@@ -540,7 +622,33 @@ write.csv(tmt4.2.down, "tmt4.2.down.csv", row.names = F)
 write.csv(tmt4.3.down, "tmt4.3.down.csv", row.names = F)
 write.csv(tmt4.4.down, "tmt4.4.down.csv", row.names = F)
 ```
+```{r}
+tmt4.H1.MP1.up.GOdata <- GOanalysisGodata(tmt4.H1.MP1.up, GamerCut, "BP")
+GOanalysisMap(tmt4.H1.MP1.up.GOdata,signodes=10, "tmt4.H1.MP1.up.GOdata.map")
+tmt4.H1.MP1.up.GOdata.df <- GOanalysisDF(tmt4.H1.MP1.up.GOdata)
+tmt4.H1.MP1.up.GOdata.df
+```
+```{r}
+tmt4.H2.MP2.up.GOdata <- GOanalysisGodata(tmt4.H2.MP2.up, GamerCut, "BP")
+GOanalysisMap(tmt4.H2.MP2.up.GOdata,signodes=10, "tmt4.H2.MP2.up.GOdata.map")
+tmt4.H2.MP2.up.GOdata.df <- GOanalysisDF(tmt4.H2.MP2.up.GOdata)
+tmt4.H2.MP2.up.GOdata.df
+```
+```{r}
+tmt4.H3.MP3.up.GOdata <- GOanalysisGodata(tmt4.H3.MP3.up, GamerCut, "BP")
+GOanalysisMap(tmt4.H3.MP3.up.GOdata,signodes=10, "tmt4.H3.MP3.up.GOdata.map")
+tmt4.H3.MP3.up.GOdata.df <- GOanalysisDF(tmt4.H3.MP3.up.GOdata)
+tmt4.H3.MP3.up.GOdata.df
+```
+```{r}
+tmt4.H4.MP4.up.GOdata <- GOanalysisGodata(tmt4.H4.MP4.up, GamerCut, "BP")
+GOanalysisMap(tmt4.H4.MP4.up.GOdata,signodes=10, "tmt4.H4.MP4.up.GOdata.map")
+tmt4.H4.MP4.up.GOdata.df <- GOanalysisDF(tmt4.H4.MP4.up.GOdata)
+tmt4.H4.MP4.up.GOdata.df
+```
 
+
+###Correlations
 ```{r CorFun}
 CorFun <- function(x, xcol, ycol){
   for(i in 1:nrow(x)){
@@ -557,70 +665,182 @@ colnames(tmt4)
 tmt4.cor <- CorFun(tmt4, 30:33,34:37)
 ```
 ```{r}
-tmt4.cor.95 <- tmt4.cor[tmt4.cor$cor>0.95,]
-
-tmt4.cor.95.1 <- tmt4.cor.95[(tmt4.cor.95$l2.H1.MP1 > log2(1.1) & tmt4.cor.95$l2.A1.B1 > log2(1.1)) | (tmt4.cor.95$l2.H1.MP1 < log2(0.9) & tmt4.cor.95$l2.A1.B1 < log2(0.9)),]
-
-tmt4.cor.95.2 <- tmt4.cor.95[(tmt4.cor.95$l2.H2.MP2 > log2(1.1) & tmt4.cor.95$l2.A2.B2 > log2(1.1)) | (tmt4.cor.95$l2.H2.MP2 < log2(0.9) & tmt4.cor.95$l2.A2.B2 < log2(0.9)),]
-
-tmt4.cor.95.3 <- tmt4.cor.95[(tmt4.cor.95$l2.H3.MP3 > log2(1.1) & tmt4.cor.95$l2.A3.B3 > log2(1.1)) | (tmt4.cor.95$l2.H3.MP3 < log2(0.9) & tmt4.cor.95$l2.A3.B3 < log2(0.9)),]
-
-tmt4.cor.95.4 <- tmt4.cor.95[(tmt4.cor.95$l2.H4.MP4 > log2(1.1) & tmt4.cor.95$l2.A4.B4 > log2(1.1)) | (tmt4.cor.95$l2.H4.MP4 < log2(0.9) & tmt4.cor.95$l2.A4.B4 < log2(0.9)),]
-
-tmt4.cor.95.all <- unique(rbind(tmt4.cor.95.1, tmt4.cor.95.2, tmt4.cor.95.3, tmt4.cor.95.4))
-
-nrow(tmt4.cor.95)
-nrow(tmt4.cor.95.all)
+median(tmt4.cor$cor)
+quantile(tmt4.cor$cor)
+nrow(tmt4.cor[tmt4.cor$cor>0,])/nrow(tmt4.cor)
 ```
 ```{r}
-write.csv(tmt4.cor.95.all[order(-tmt4.cor.95.all$cor), c("cor", "Entrez", "Gene","Accession","Protein","l2.H1.MP1","l2.H2.MP2","l2.H3.MP3","l2.H4.MP4","l2.A1.B1","l2.A2.B2","l2.A3.B3","l2.A4.B4")], row.names = F, file = "tmt4.cor.95.all.csv")
+ggplot(tmt4.cor, mapping = aes(x=cor))+
+  geom_density(fill="#7bafd4", alpha=0.5)+
+  theme_bw()+
+  geom_vline(xintercept = 0)+
+  geom_vline(xintercept = median(tmt4.cor$cor), linetype="dashed",color="red")+
+  xlim(-1,1)+
+  ylim(0,1.4)+
+  theme(text = element_text(size=14))+
+  coord_equal(expand = F)+
+  xlab("Pearson correlation")
+ggsave("tmt4_l2fc_Pearson_density.jpg", width = 5, height = 3.5)
 ```
-
+####Positively correlated proteins
 ```{r}
-tmt4.cor.95.all$l2.H1.MP1[tmt4.cor.95.all$l2.H1.MP1 > 1] <- 1
-tmt4.cor.95.all$l2.H2.MP2[tmt4.cor.95.all$l2.H2.MP2 > 1] <- 1
-tmt4.cor.95.all$l2.H3.MP3[tmt4.cor.95.all$l2.H3.MP3 > 1] <- 1
-tmt4.cor.95.all$l2.H4.MP4[tmt4.cor.95.all$l2.H4.MP4 > 1] <- 1
+tmt4.cor.pos <- tmt4.cor[tmt4.cor$cor>0.8,]
 
-tmt4.cor.95.all$l2.A1.B1[tmt4.cor.95.all$l2.A1.B1 > 1] <- 1
-tmt4.cor.95.all$l2.A2.B2[tmt4.cor.95.all$l2.A2.B2 > 1] <- 1
-tmt4.cor.95.all$l2.A3.B3[tmt4.cor.95.all$l2.A3.B3 > 1] <- 1
-tmt4.cor.95.all$l2.A4.B4[tmt4.cor.95.all$l2.A4.B4 > 1] <- 1
-```
-```{r}
-tmt4.cor.95.all$l2.H1.MP1[tmt4.cor.95.all$l2.H1.MP1 < -1] <- -1
-tmt4.cor.95.all$l2.H2.MP2[tmt4.cor.95.all$l2.H2.MP2 < -1] <- -1
-tmt4.cor.95.all$l2.H3.MP3[tmt4.cor.95.all$l2.H3.MP3 < -1] <- -1
-tmt4.cor.95.all$l2.H4.MP4[tmt4.cor.95.all$l2.H4.MP4 < -1] <- -1
+tmt4.cor.pos.1 <- tmt4.cor.pos[(tmt4.cor.pos$l2.H1.MP1 > log2(100/85) & tmt4.cor.pos$l2.A1.B1 > log2(100/85)) | (tmt4.cor.pos$l2.H1.MP1 < log2(85/100) & tmt4.cor.pos$l2.A1.B1 < log2(85/100)),]
 
-tmt4.cor.95.all$l2.A1.B1[tmt4.cor.95.all$l2.A1.B1 < -1] <- -1
-tmt4.cor.95.all$l2.A2.B2[tmt4.cor.95.all$l2.A2.B2 < -1] <- -1
-tmt4.cor.95.all$l2.A3.B3[tmt4.cor.95.all$l2.A3.B3 < -1] <- -1
-tmt4.cor.95.all$l2.A4.B4[tmt4.cor.95.all$l2.A4.B4 < -1] <- -1
-```
+tmt4.cor.pos.2 <- tmt4.cor.pos[(tmt4.cor.pos$l2.H2.MP2 > log2(100/85) & tmt4.cor.pos$l2.A2.B2 > log2(100/85)) | (tmt4.cor.pos$l2.H2.MP2 < log2(85/100) & tmt4.cor.pos$l2.A2.B2 < log2(85/100)),]
 
+tmt4.cor.pos.3 <- tmt4.cor.pos[(tmt4.cor.pos$l2.H3.MP3 > log2(100/85) & tmt4.cor.pos$l2.A3.B3 > log2(100/85)) | (tmt4.cor.pos$l2.H3.MP3 < log2(85/100) & tmt4.cor.pos$l2.A3.B3 < log2(85/100)),]
 
-```{r}
-tmt4.cor.95.all.m <- as.matrix(tmt4.cor.95.all[,30:37])
-rownames(tmt4.cor.95.all.m) <- tmt4.cor.95.all$Gene
-colnames(tmt4.cor.95.all.m) <- c("BM.1/MP.1", "BM.2/MP.2", "BM.3/MP.3", "BM.4/MP.4", "acs.1/B73.1", "acs.2/B73.2", "acs.3/B73.3", "acs.4/B73.4")
-heatmap(tmt4.cor.95.all.m, cexCol = .8, cexRow = .1, col = colorspace::diverge_hsv(n = 12), scale = "none")
-```
+tmt4.cor.pos.4 <- tmt4.cor.pos[(tmt4.cor.pos$l2.H4.MP4 > log2(100/85) & tmt4.cor.pos$l2.A4.B4 > log2(100/85)) | (tmt4.cor.pos$l2.H4.MP4 < log2(85/100) & tmt4.cor.pos$l2.A4.B4 < log2(85/100)),]
 
-```{r}
-translation <- unique(c(100194112, 100283974, 100282717, 100272255, 100282772, 100194112, 100382451, 100283974, 100192778, 100282772, 100286120, 100272955, 100284180, 100285173, 100283907, 100282717, 100272255, 845232, 100284180, 100194112, 100285173, 100382451, 100283974, 100283907, 100282717, 100192778, 100272255, 100282772, 100286120, 845232, 100284180, 100194112, 100285173, 100382451, 100283974, 100283907, 100282717, 100192778, 100272255, 100282772, 100286120, 845232, 100194088, 100284180, 100382451, 100282717, 100192778, 542750, 100194058, 100286120, 845232, 100284180, 100382451, 100282717, 100192778, 100286120, 845232))
+tmt4.cor.pos.all <- unique(rbind(tmt4.cor.pos.1, tmt4.cor.pos.2, tmt4.cor.pos.3, tmt4.cor.pos.4))
+
+nrow(tmt4)
+nrow(tmt4.cor.pos)
+nrow(tmt4.cor.pos.all)
 ```
 ```{r}
-photosynthesis <- unique(c(542212, 100277775, 542372, 542393, 100283327, 100282820, 100193737, 542212, 100277775, 542177, 100272890, 542372, 542393, 103635678, 100276890, 100281235, 100382672, 100272890, 100282043, 100276890, 100281235, 100282043, 100276890, 100281235, 100282214, 542321, 100282043))
+tmt4.cor.pos.all$l2.H1.MP1[tmt4.cor.pos.all$l2.H1.MP1 > 0.5] <- 0.5
+tmt4.cor.pos.all$l2.H2.MP2[tmt4.cor.pos.all$l2.H2.MP2 > 0.5] <- 0.5
+tmt4.cor.pos.all$l2.H3.MP3[tmt4.cor.pos.all$l2.H3.MP3 > 0.5] <- 0.5
+tmt4.cor.pos.all$l2.H4.MP4[tmt4.cor.pos.all$l2.H4.MP4 > 0.5] <- 0.5
+
+tmt4.cor.pos.all$l2.A1.B1[tmt4.cor.pos.all$l2.A1.B1 > 0.5] <- 0.5
+tmt4.cor.pos.all$l2.A2.B2[tmt4.cor.pos.all$l2.A2.B2 > 0.5] <- 0.5
+tmt4.cor.pos.all$l2.A3.B3[tmt4.cor.pos.all$l2.A3.B3 > 0.5] <- 0.5
+tmt4.cor.pos.all$l2.A4.B4[tmt4.cor.pos.all$l2.A4.B4 > 0.5] <- 0.5
+
+tmt4.cor.pos.all$l2.H1.MP1[tmt4.cor.pos.all$l2.H1.MP1 < -0.5] <- -0.5
+tmt4.cor.pos.all$l2.H2.MP2[tmt4.cor.pos.all$l2.H2.MP2 < -0.5] <- -0.5
+tmt4.cor.pos.all$l2.H3.MP3[tmt4.cor.pos.all$l2.H3.MP3 < -0.5] <- -0.5
+tmt4.cor.pos.all$l2.H4.MP4[tmt4.cor.pos.all$l2.H4.MP4 < -0.5] <- -0.5
+
+tmt4.cor.pos.all$l2.A1.B1[tmt4.cor.pos.all$l2.A1.B1 < -0.5] <- -0.5
+tmt4.cor.pos.all$l2.A2.B2[tmt4.cor.pos.all$l2.A2.B2 < -0.5] <- -0.5
+tmt4.cor.pos.all$l2.A3.B3[tmt4.cor.pos.all$l2.A3.B3 < -0.5] <- -0.5
+tmt4.cor.pos.all$l2.A4.B4[tmt4.cor.pos.all$l2.A4.B4 < -0.5] <- -0.5
 ```
 ```{r}
-length(photosynthesis)
+tmt4.cor.pos.all.m <- as.matrix(tmt4.cor.pos.all[,c(30:37)])
+rownames(tmt4.cor.pos.all.m) <- tmt4.cor.pos.all$Gene
+colnames(tmt4.cor.pos.all.m) <- c("BM.1/MP.1", "BM.2/MP.2", "BM.3/MP.3","BM.4/MP.4",  "acs.1/B73.1","acs.2/B73.2","acs.3/B73.3",  "acs.4/B73.4")
+tmt4.cor.pos.all.m.hm <- heatmap(tmt4.cor.pos.all.m, cexCol = .9, cexRow = 0.05, col = colorspace::diverge_hsv(n = 12), scale = "none", keep.dendro = T, Colv = NA)
 ```
-
 ```{r}
-DNAbinding <- unique(c(103639303, 103625929, 100274138, 542076, 100501984, 103639303, 103625929, 100274138, 100501984, 103639303, 103653048, 103625929, 100274138, 100501984, 100384748, 100274242, 103639303, 542007, 103625929, 100274138, 100501984, 100274242, 103639303, 103625929, 100274138, 100501984, 100274242, 100277594, 542007, 100384575, 100384655, 100193200, 100191211, 100286254, 103639303, 103625929, 100274138, 103645753, 100501984, 100274242, 103640333))
+tmt4.cor.pos.all.m.hm.clust <- as.hclust(tmt4.cor.pos.all.m.hm$Rowv)
+tmt4.cor.pos.all.m.hm.clust.cut <- cutree(tmt4.cor.pos.all.m.hm.clust, k=4)
+
+rowsidecolors <- as.vector(tmt4.cor.pos.all.m.hm.clust.cut)
+rowsidecolors[rowsidecolors==1] <- "#D81B60"
+rowsidecolors[rowsidecolors==2] <- "#1E88E5"
+rowsidecolors[rowsidecolors==3] <- "#FFC107"
+rowsidecolors[rowsidecolors==4] <- "#004D40"
+
+heatmap(tmt4.cor.pos.all.m, cexCol = .9, cexRow = 0.1, col = colorspace::diverge_hsv(n = 12), scale = "none", RowSideColors = rowsidecolors, Colv = NA)
+```
+```{r}
+tmt4.cor.pos.all.m.hm.clust.cut.df <- stack(as.data.frame(as.list(tmt4.cor.pos.all.m.hm.clust.cut)))
+colnames(tmt4.cor.pos.all.m.hm.clust.cut.df) <- c("group","Gene")
+tmt4.cor.pos.all.m.hm.clust.cut.df$color <- rowsidecolors
+tmt4.cor.pos.all.m.hm.clust.cut.df$Gene <- as.character(tmt4.cor.pos.all.m.hm.clust.cut.df$Gene)
+tmt4.cor.pos.all.m.hm.clust.cut.df <- join_all(dfs = list(tmt4.cor.pos.all.m.hm.clust.cut.df,Entrez), by = "Gene", type="left", match="first")
+write.csv(tmt4.cor.pos.all.m.hm.clust.cut.df, "tmt4.cor.pos.all.m.hm.clust.cut.df.csv", row.names = F)
+```
+```{r}
+tmt4.cor.pos.group1 <- tmt4.cor.pos.all.m.hm.clust.cut.df[tmt4.cor.pos.all.m.hm.clust.cut.df$group==1,]
+tmt4.cor.pos.group2 <- tmt4.cor.pos.all.m.hm.clust.cut.df[tmt4.cor.pos.all.m.hm.clust.cut.df$group==2,]
+tmt4.cor.pos.group3 <- tmt4.cor.pos.all.m.hm.clust.cut.df[tmt4.cor.pos.all.m.hm.clust.cut.df$group==3,]
+tmt4.cor.pos.group4 <- tmt4.cor.pos.all.m.hm.clust.cut.df[tmt4.cor.pos.all.m.hm.clust.cut.df$group==4,]
+```
+```{r}
+tmt4.cor.pos.group1.GOdata <- GOanalysisGodata(tmt4.cor.pos.group1, GamerCut, "BP")
+GOanalysisMap(tmt4.cor.pos.group1.GOdata,signodes=10, "tmt4.cor.pos.group1.GOdata.map")
+tmt4.cor.pos.group1.GOdata.df <- GOanalysisDF(tmt4.cor.pos.group1.GOdata)
+tmt4.cor.pos.group1.GOdata.df
+```
+```{r}
+tmt4.cor.pos.group2.GOdata <- GOanalysisGodata(tmt4.cor.pos.group2, GamerCut, "BP")
+GOanalysisMap(tmt4.cor.pos.group2.GOdata,signodes=10, "tmt4.cor.pos.group2.GOdata.map")
+tmt4.cor.pos.group2.GOdata.df <- GOanalysisDF(tmt4.cor.pos.group2.GOdata)
+tmt4.cor.pos.group2.GOdata.df
+```
+```{r}
+tmt4.cor.pos.group3.GOdata <- GOanalysisGodata(tmt4.cor.pos.group3, GamerCut, "BP")
+GOanalysisMap(tmt4.cor.pos.group3.GOdata,signodes=10, "tmt4.cor.pos.group3.GOdata.map")
+tmt4.cor.pos.group3.GOdata.df <- GOanalysisDF(tmt4.cor.pos.group3.GOdata)
+tmt4.cor.pos.group3.GOdata.df
+```
+```{r}
+tmt4.cor.pos.group4.GOdata <- GOanalysisGodata(tmt4.cor.pos.group4, GamerCut, "BP")
+GOanalysisMap(tmt4.cor.pos.group4.GOdata,signodes=10, "tmt4.cor.pos.group4.GOdata.map")
+tmt4.cor.pos.group4.GOdata.df <- GOanalysisDF(tmt4.cor.pos.group4.GOdata)
+tmt4.cor.pos.group4.GOdata.df
 ```
 
+####Negatively correlated proteins
+```{r}
+tmt4.cor.neg <- tmt4.cor[tmt4.cor$cor < -.8,]
+```
+```{r}
+tmt4.cor.neg.1 <- tmt4.cor.neg[tmt4.cor.neg$l2.H1.MP1 > log2(100/85) | tmt4.cor.neg$l2.H1.MP1 < log2(85/100),]
+tmt4.cor.neg.2 <- tmt4.cor.neg[tmt4.cor.neg$l2.H2.MP2 > log2(100/85) | tmt4.cor.neg$l2.H2.MP2 < log2(85/100),]
+tmt4.cor.neg.3 <- tmt4.cor.neg[tmt4.cor.neg$l2.H3.MP3 > log2(100/85) | tmt4.cor.neg$l2.H3.MP3 < log2(85/100),]
+tmt4.cor.neg.4 <- tmt4.cor.neg[tmt4.cor.neg$l2.H4.MP4 > log2(100/85) | tmt4.cor.neg$l2.H4.MP4 < log2(85/100),]
+
+tmt4.cor.neg.all <- unique(rbind(tmt4.cor.neg.1, tmt4.cor.neg.2, tmt4.cor.neg.3, tmt4.cor.neg.4))
+nrow(tmt4)
+nrow(tmt4.cor.neg)
+nrow(tmt4.cor.neg.all)
+```
+```{r}
+tmt4.cor.neg.all$l2.H1.MP1[tmt4.cor.neg.all$l2.H1.MP1 > 0.5] <- 0.5
+tmt4.cor.neg.all$l2.H2.MP2[tmt4.cor.neg.all$l2.H2.MP2 > 0.5] <- 0.5
+tmt4.cor.neg.all$l2.H3.MP3[tmt4.cor.neg.all$l2.H3.MP3 > 0.5] <- 0.5
+tmt4.cor.neg.all$l2.H4.MP4[tmt4.cor.neg.all$l2.H4.MP4 > 0.5] <- 0.5
+
+tmt4.cor.neg.all$l2.A1.B1[tmt4.cor.neg.all$l2.A1.B1 > 0.5] <- 0.5
+tmt4.cor.neg.all$l2.A2.B2[tmt4.cor.neg.all$l2.A2.B2 > 0.5] <- 0.5
+tmt4.cor.neg.all$l2.A3.B3[tmt4.cor.neg.all$l2.A3.B3 > 0.5] <- 0.5
+tmt4.cor.neg.all$l2.A4.B4[tmt4.cor.neg.all$l2.A4.B4 > 0.5] <- 0.5
+
+tmt4.cor.neg.all$l2.H1.MP1[tmt4.cor.neg.all$l2.H1.MP1 < -0.5] <- -0.5
+tmt4.cor.neg.all$l2.H2.MP2[tmt4.cor.neg.all$l2.H2.MP2 < -0.5] <- -0.5
+tmt4.cor.neg.all$l2.H3.MP3[tmt4.cor.neg.all$l2.H3.MP3 < -0.5] <- -0.5
+tmt4.cor.neg.all$l2.H4.MP4[tmt4.cor.neg.all$l2.H4.MP4 < -0.5] <- -0.5
+
+tmt4.cor.neg.all$l2.A1.B1[tmt4.cor.neg.all$l2.A1.B1 < -0.5] <- -0.5
+tmt4.cor.neg.all$l2.A2.B2[tmt4.cor.neg.all$l2.A2.B2 < -0.5] <- -0.5
+tmt4.cor.neg.all$l2.A3.B3[tmt4.cor.neg.all$l2.A3.B3 < -0.5] <- -0.5
+tmt4.cor.neg.all$l2.A4.B4[tmt4.cor.neg.all$l2.A4.B4 < -0.5] <- -0.5
+```
+```{r}
+tmt4.cor.neg.m <- as.matrix(tmt4.cor.neg.all[,c(30:37)])
+rownames(tmt4.cor.neg.m) <- tmt4.cor.neg.all$Gene
+colnames(tmt4.cor.neg.m) <- c("BM.1/MP.1", "BM.2/MP.2", "BM.3/MP.3","BM.4/MP.4",  "acs.1/B73.1","acs.2/B73.2","acs.3/B73.3",  "acs.4/B73.4")
+tmt4.cor.neg.m.hm <- heatmap(tmt4.cor.neg.m, cexCol = .9, cexRow = 0.05, col = colorspace::diverge_hsv(n = 12), scale = "none", keep.dendro = T, Colv = NA)
+```
+```{r}
+tmt4.cor.neg.all.m.hm.clust <- as.hclust(tmt4.cor.neg.m.hm$Rowv)
+tmt4.cor.neg.all.m.hm.clust.cut <- cutree(tmt4.cor.neg.all.m.hm.clust, k=6)
+
+rowsidecolors <- as.vector(tmt4.cor.neg.all.m.hm.clust.cut)
+rowsidecolors[rowsidecolors==1] <- "#D81B60"
+rowsidecolors[rowsidecolors==2] <- "#1E88E5"
+rowsidecolors[rowsidecolors==3] <- "#FFC107"
+rowsidecolors[rowsidecolors==4] <- "#004D40"
+rowsidecolors[rowsidecolors==5] <- "#66E88C"
+rowsidecolors[rowsidecolors==6] <- "#DC7306"
+
+heatmap(tmt4.cor.neg.m, cexCol = .9, cexRow = 0.2, col = colorspace::diverge_hsv(n = 12), scale = "none", RowSideColors = rowsidecolors, Colv = NA)
+```
+```{r}
+tmt4.cor.neg.all.m.hm.clust.cut.df <- stack(as.data.frame(as.list(tmt4.cor.neg.all.m.hm.clust.cut)))
+colnames(tmt4.cor.neg.all.m.hm.clust.cut.df) <- c("group","Gene")
+tmt4.cor.neg.all.m.hm.clust.cut.df$color <- rowsidecolors
+tmt4.cor.neg.all.m.hm.clust.cut.df <- join_all(dfs = list(tmt4.cor.neg.all.m.hm.clust.cut.df, Entrez), by = "Gene", type="left", match="first")
+write.csv(tmt4.cor.neg.all.m.hm.clust.cut.df, "tmt4.cor.neg.all.m.hm.clust.cut.df.csv", row.names = F)
+```
 
 ##Density plots
 ```{r BM/MP density}
@@ -855,6 +1075,42 @@ tmt4.n$A.2.tot <- tmt4.n$A.2/tmt4.n$A.tot
 tmt4.n$A.3.tot <- tmt4.n$A.3/tmt4.n$A.tot
 tmt4.n$A.4.tot <- tmt4.n$A.4/tmt4.n$A.tot
 ```
+```{r}
+tmt4.n$MP.1.tot <- rowSums(tmt4.n[,c("B.1.tot","M.1.tot")])
+tmt4.n$MP.2.tot <- rowSums(tmt4.n[,c("B.2.tot","M.2.tot")])
+tmt4.n$MP.3.tot <- rowSums(tmt4.n[,c("B.3.tot","M.3.tot")])
+tmt4.n$MP.4.tot <- rowSums(tmt4.n[,c("B.4.tot","M.4.tot")])
+colnames(tmt4.n)
+```
+
+```{r}
+tmt4.n.H2MP <- tmt4.n[,c(1,37:40,45:48)]
+tmt4.n.H2MP.m <- melt(tmt4.n.H2MP)
+tmt4.n.H2MP.m
+```
+```{r}
+tmt4.n.H2MP.m$Genotype <- "MP"
+tmt4.n.H2MP.m$Genotype[tmt4.n.H2MP.m$variable=="H.1.tot"|tmt4.n.H2MP.m$variable=="H.2.tot"|tmt4.n.H2MP.m$variable=="H.3.tot"|tmt4.n.H2MP.m$variable=="H.4.tot"] <- "BxM"
+```
+```{r}
+tmt4.n.H2MP.m$Section <- "1"
+tmt4.n.H2MP.m$Section[tmt4.n.H2MP.m$variable=="H.2.tot"|tmt4.n.H2MP.m$variable=="MP.2.tot"] <- "2"
+tmt4.n.H2MP.m$Section[tmt4.n.H2MP.m$variable=="H.3.tot"|tmt4.n.H2MP.m$variable=="MP.3.tot"] <- "3"
+tmt4.n.H2MP.m$Section[tmt4.n.H2MP.m$variable=="H.4.tot"|tmt4.n.H2MP.m$variable=="MP.4.tot"] <- "4"
+```
+
+
+```{r}
+tmt4.n.H2MP.m$Category <- "Other"
+tmt4.n.H2MP.m$Category[tmt4.n.H2MP.m$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)] <- "PhANGs/PhAPGs"
+tmt4.n.H2MP.m$Category[tmt4.n.H2MP.m$Gene %in% c(GOIs$NE.PtRibo, GOIs$PE.ribo)] <- "Plastid ribosome"
+tmt4.n.H2MP.m$Category[tmt4.n.H2MP.m$Gene %in% GOIs$CytoRibo] <- "Cytosolic ribosome"
+```
+```{r}
+tmt4.n.H2MP.m
+ggplot(tmt4.n.H2MP.m[tmt4.n.H2MP.m$Section==1,], mapping = aes(x=Genotype, y=value, fill=Category))+
+  geom_violin()
+```
 ###Heatmaps
 ```{r all genes heatmap by clustering}
 tmt4.n.m <- as.matrix(tmt4.n[,29:44])
@@ -879,13 +1135,19 @@ heatmap(tmt4.n.cor.m)
 ```{r plastid ribosome heatmap - normalized across sections}
 tmt4.n.pRibo.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo),29:44])
 rownames(tmt4.n.pRibo.m) <- tmt4.n$Gene[tmt4.n$Gene %in% c(GOIs$PE.ribo, GOIs$NE.PtRibo)]
-heatmap(tmt4.n.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4, scale = "none")
+heatmap(tmt4.n.pRibo.m, Colv = NA, cexCol = .8, cexRow = .4)
+```
+```{r cytosolic ribosome heatmap - normalized across sections}
+tmt4.n.CytoRibo.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% GOIs$plastid[!GOIs$plastid%in% c(GOIs$PhANGs, GOIs$PhAPGs, GOIs$NE.PtRibo, GOIs$PE.ribo)],29:44])
+rownames(tmt4.n.CytoRibo.m) <- tmt4.n$Gene[tmt4.n$Gene %in% GOIs$plastid[!GOIs$plastid%in% c(GOIs$PhANGs, GOIs$PhAPGs, GOIs$NE.PtRibo, GOIs$PE.ribo)]]
+heatmap(tmt4.n.CytoRibo.m, Colv = NA, cexCol = .8, cexRow = .4)
 ```
 ```{r photosynthesis-associated heatmap - normalized across sections}
 tmt4.n.PhAGs.m <- as.matrix(tmt4.n[tmt4.n$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs),29:44])
 rownames(tmt4.n.PhAGs.m) <- tmt4.n$Gene[tmt4.n$Gene %in% c(GOIs$PhANGs, GOIs$PhAPGs)]
 heatmap(tmt4.n.PhAGs.m, Colv = NA, cexCol = .8, cexRow = .2, scale = "none")
 ```
+
 
 ##Normalized to median of sections
 ```{r}
